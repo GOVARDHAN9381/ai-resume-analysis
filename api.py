@@ -90,6 +90,48 @@ app.mount("/static", StaticFiles(directory="static"), name="static")
 _dataset: List[dict] = []
 _matcher = ResumeMatcher()
 
+def _auto_load_dataset():
+    """Try to load dataset from SQLite, then sample CSV, on startup."""
+    global _dataset
+    # 1. Try SQLite first
+    try:
+        db_path = "data/candidates.db"
+        if os.path.exists(db_path):
+            conn = sqlite3.connect(db_path)
+            df = pd.read_sql_query(
+                "SELECT id, name, email, phone, category, experience_years, "
+                "education_degree, education_institution, skills, resume_text FROM candidates",
+                conn
+            )
+            conn.close()
+            if not df.empty:
+                _dataset = df.to_dict(orient="records")
+                print(f"✅ Auto-loaded {len(_dataset):,} candidates from SQLite.")
+                return
+    except Exception as e:
+        print(f"⚠️ SQLite load failed: {e}")
+
+    # 2. Fall back to sample_dataset.csv
+    for csv_path in ["sample_dataset.csv", "data/candidates_dataset.csv"]:
+        if os.path.exists(csv_path):
+            try:
+                df = pd.read_csv(csv_path)
+                df.columns = [c.strip().lower().replace(" ", "_") for c in df.columns]
+                for col, default in OPTIONAL_DEFAULTS.items():
+                    if col not in df.columns:
+                        df[col] = default
+                df["experience_years"] = pd.to_numeric(df["experience_years"], errors="coerce").fillna(0).astype(int)
+                _dataset = df.to_dict(orient="records")
+                print(f"✅ Auto-loaded {len(_dataset):,} candidates from {csv_path}.")
+                return
+            except Exception as e:
+                print(f"⚠️ CSV load failed ({csv_path}): {e}")
+
+    print("⚠️ No dataset auto-loaded — upload one via the UI.")
+
+# Run at startup
+_auto_load_dataset()
+
 REQUIRED_COLUMNS = {"name", "email", "resume_text"}
 OPTIONAL_DEFAULTS = {
     "phone": "N/A",
@@ -169,14 +211,31 @@ async def upload_dataset(file: UploadFile = File(...)):
     """Accept a CSV file, validate it, store it globally."""
     global _dataset
 
-    if not file.filename.endswith(".csv"):
+    if not file.filename.lower().endswith(".csv"):
         raise HTTPException(status_code=400, detail="Only CSV files are accepted.")
 
     contents = await file.read()
-    try:
-        df = pd.read_csv(io.BytesIO(contents))
-    except Exception as e:
-        raise HTTPException(status_code=400, detail=f"Failed to parse CSV: {e}")
+
+    # Try multiple encodings
+    df = None
+    for encoding in ["utf-8", "latin-1", "cp1252", "utf-8-sig"]:
+        try:
+            df = pd.read_csv(io.BytesIO(contents), encoding=encoding)
+            break
+        except Exception:
+            continue
+
+    if df is None:
+        raise HTTPException(status_code=400, detail="Failed to parse CSV. Make sure it is a valid CSV file.")
+
+    # Show the actual columns in error for debugging
+    df.columns = [c.strip().lower().replace(" ", "_") for c in df.columns]
+    missing = REQUIRED_COLUMNS - set(df.columns)
+    if missing:
+        raise HTTPException(
+            status_code=422,
+            detail=f"CSV is missing required columns: {missing}. Your CSV has: {list(df.columns)}"
+        )
 
     try:
         _dataset = _normalize_df(df)
