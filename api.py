@@ -85,53 +85,8 @@ async def ping():
 app.mount("/static", StaticFiles(directory="static"), name="static")
 
 # ─────────────────────────────────────────────
-# Global State (in-memory dataset store)
+# Constants & Schema
 # ─────────────────────────────────────────────
-_dataset: List[dict] = []
-_matcher = ResumeMatcher()
-
-def _auto_load_dataset():
-    """Try to load dataset from SQLite, then sample CSV, on startup."""
-    global _dataset
-    # 1. Try SQLite first
-    try:
-        db_path = "data/candidates.db"
-        if os.path.exists(db_path):
-            conn = sqlite3.connect(db_path)
-            df = pd.read_sql_query(
-                "SELECT id, name, email, phone, category, experience_years, "
-                "education_degree, education_institution, skills, resume_text FROM candidates",
-                conn
-            )
-            conn.close()
-            if not df.empty:
-                _dataset = df.to_dict(orient="records")
-                print(f"✅ Auto-loaded {len(_dataset):,} candidates from SQLite.")
-                return
-    except Exception as e:
-        print(f"⚠️ SQLite load failed: {e}")
-
-    # 2. Fall back to sample_dataset.csv
-    for csv_path in ["sample_dataset.csv", "data/candidates_dataset.csv"]:
-        if os.path.exists(csv_path):
-            try:
-                df = pd.read_csv(csv_path)
-                df.columns = [c.strip().lower().replace(" ", "_") for c in df.columns]
-                for col, default in OPTIONAL_DEFAULTS.items():
-                    if col not in df.columns:
-                        df[col] = default
-                df["experience_years"] = pd.to_numeric(df["experience_years"], errors="coerce").fillna(0).astype(int)
-                _dataset = df.to_dict(orient="records")
-                print(f"✅ Auto-loaded {len(_dataset):,} candidates from {csv_path}.")
-                return
-            except Exception as e:
-                print(f"⚠️ CSV load failed ({csv_path}): {e}")
-
-    print("⚠️ No dataset auto-loaded — upload one via the UI.")
-
-# Run at startup
-_auto_load_dataset()
-
 REQUIRED_COLUMNS = {"name", "email", "resume_text"}
 OPTIONAL_DEFAULTS = {
     "phone": "N/A",
@@ -142,6 +97,12 @@ OPTIONAL_DEFAULTS = {
     "skills": "",
     "id": None,
 }
+
+# ─────────────────────────────────────────────
+# Global State (in-memory dataset store)
+# ─────────────────────────────────────────────
+_dataset: List[dict] = []
+_matcher = ResumeMatcher()
 
 # ─────────────────────────────────────────────
 # Helpers
@@ -167,26 +128,21 @@ def _load_sqlite_as_dataset():
 
 def _normalize_df(df: pd.DataFrame) -> List[dict]:
     """Normalize uploaded CSV columns to the expected schema."""
-    # Lowercase all column names
     df.columns = [c.strip().lower().replace(" ", "_") for c in df.columns]
 
     missing = REQUIRED_COLUMNS - set(df.columns)
     if missing:
         raise ValueError(f"CSV is missing required columns: {missing}")
 
-    # Fill optional columns with defaults
     for col, default in OPTIONAL_DEFAULTS.items():
         if col not in df.columns:
             df[col] = default
 
-    # Assign IDs if missing
     if df["id"].isnull().all():
         df["id"] = range(1, len(df) + 1)
 
-    # Coerce experience_years
     df["experience_years"] = pd.to_numeric(df["experience_years"], errors="coerce").fillna(0).astype(int)
 
-    # If skills column is empty, extract from resume_text
     mask_empty_skills = df["skills"].isna() | (df["skills"].astype(str).str.strip() == "")
     if mask_empty_skills.any():
         df.loc[mask_empty_skills, "skills"] = df.loc[mask_empty_skills, "resume_text"].apply(
@@ -194,6 +150,50 @@ def _normalize_df(df: pd.DataFrame) -> List[dict]:
         )
 
     return df.to_dict(orient="records")
+
+
+def _auto_load_dataset():
+    """Try to load dataset from SQLite, then sample CSV, on startup."""
+    global _dataset
+
+    # 1. Try SQLite first
+    try:
+        db_path = "data/candidates.db"
+        if os.path.exists(db_path):
+            conn = sqlite3.connect(db_path)
+            df = pd.read_sql_query(
+                "SELECT id, name, email, phone, category, experience_years, "
+                "education_degree, education_institution, skills, resume_text FROM candidates",
+                conn
+            )
+            conn.close()
+            if not df.empty:
+                _dataset = df.to_dict(orient="records")
+                print(f"✅ Auto-loaded {len(_dataset):,} candidates from SQLite.")
+                return
+    except Exception as e:
+        print(f"⚠️ SQLite load failed: {e}")
+
+    # 2. Fall back to CSV files
+    for csv_path in ["sample_dataset.csv", "data/candidates_dataset.csv"]:
+        if os.path.exists(csv_path):
+            try:
+                df = pd.read_csv(csv_path)
+                df.columns = [c.strip().lower().replace(" ", "_") for c in df.columns]
+                for col, default in OPTIONAL_DEFAULTS.items():
+                    if col not in df.columns:
+                        df[col] = default
+                df["experience_years"] = pd.to_numeric(df["experience_years"], errors="coerce").fillna(0).astype(int)
+                _dataset = df.to_dict(orient="records")
+                print(f"✅ Auto-loaded {len(_dataset):,} candidates from {csv_path}.")
+                return
+            except Exception as e:
+                print(f"⚠️ CSV load failed ({csv_path}): {e}")
+
+    print("⚠️ No dataset auto-loaded — upload one via the UI.")
+
+# Auto-load on startup
+_auto_load_dataset()
 
 
 # ─────────────────────────────────────────────
