@@ -6,8 +6,23 @@
 'use strict';
 
 // ⚠️ CHANGE THIS to your deployed Render URL once your backend is hosted
-const API_BASE_URL = "https://ai-resume-backend.onrender.com"; // Default for now, update if your Render URL is different
+const API_BASE_URL = "https://ai-resume-analysis-wzya.onrender.com";
 
+// ─── Keep-Alive Heartbeat ─────────────────────
+// Pings the backend every 10 minutes so Render never cold-starts
+(function keepAlive() {
+  const INTERVAL_MS = 10 * 60 * 1000; // 10 minutes
+  async function ping() {
+    try {
+      await fetch(API_BASE_URL + '/ping');
+      console.debug('[KeepAlive] Backend pinged ✅');
+    } catch (_) {
+      console.debug('[KeepAlive] Ping failed — backend may be waking up.');
+    }
+  }
+  ping(); // ping immediately on page load
+  setInterval(ping, INTERVAL_MS);
+})();
 
 // ─── JD Templates ────────────────────────────
 const JD_TEMPLATES = {

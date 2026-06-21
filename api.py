@@ -77,6 +77,11 @@ async def serve_index():
         "Expires": "0"
     })
 
+@app.get("/ping")
+async def ping():
+    """Keep-alive endpoint — called every 10 min to prevent Render cold starts."""
+    return {"status": "ok", "message": "pong 🏓"}
+
 app.mount("/static", StaticFiles(directory="static"), name="static")
 
 # ─────────────────────────────────────────────
