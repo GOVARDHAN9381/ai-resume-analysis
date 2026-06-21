@@ -43,6 +43,12 @@ try:
             cred = credentials.Certificate(FIREBASE_CRED_PATH)
             firebase_admin.initialize_app(cred)
             print(f"✅ Successfully initialized Firebase using {FIREBASE_CRED_PATH}.")
+        elif "FIREBASE_CREDENTIALS_JSON" in os.environ:
+            import json
+            cred_dict = json.loads(os.environ["FIREBASE_CREDENTIALS_JSON"])
+            cred = credentials.Certificate(cred_dict)
+            firebase_admin.initialize_app(cred)
+            print("✅ Successfully initialized Firebase using env var credentials.")
         else:
             # Fallback to Application Default Credentials (ADC)
             firebase_admin.initialize_app(options={'projectId': 'ai-resume-872f9'})
@@ -51,6 +57,7 @@ try:
     db = firestore.client()
 except Exception as e:
     print(f"❌ Failed to initialize Firebase: {e}\n⚠️ Please run 'gcloud auth application-default login' in your terminal.")
+    db = None
 
 app = FastAPI(title="ResumeAI API", version="2.0.0")
 
