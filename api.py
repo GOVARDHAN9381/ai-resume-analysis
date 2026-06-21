@@ -35,19 +35,22 @@ from src.screen_matcher import ResumeMatcher
 
 # Firebase Initialization
 FIREBASE_CRED_PATH = "serviceAccountKey.json"
+db = None
 
 try:
-    if os.path.exists(FIREBASE_CRED_PATH):
-        cred = credentials.Certificate(FIREBASE_CRED_PATH)
-        # Prevent initializing multiple times in development with hot-reloading
-        if not firebase_admin._apps:
+    if not firebase_admin._apps:
+        if os.path.exists(FIREBASE_CRED_PATH):
+            cred = credentials.Certificate(FIREBASE_CRED_PATH)
             firebase_admin.initialize_app(cred)
-        print(f"✅ Successfully initialized Firebase using {FIREBASE_CRED_PATH}.")
-        # db = firestore.client() # Uncomment to interact with Firestore database
-    else:
-        print(f"⚠️ Firebase credentials file '{FIREBASE_CRED_PATH}' not found. Please add it to connect to your database.")
+            print(f"✅ Successfully initialized Firebase using {FIREBASE_CRED_PATH}.")
+        else:
+            # Fallback to Application Default Credentials (ADC)
+            firebase_admin.initialize_app(options={'projectId': 'ai-resume-872f9'})
+            print("✅ Successfully initialized Firebase using Application Default Credentials (ADC).")
+    
+    db = firestore.client()
 except Exception as e:
-    print(f"❌ Failed to initialize Firebase: {e}")
+    print(f"❌ Failed to initialize Firebase: {e}\n⚠️ Please run 'gcloud auth application-default login' in your terminal.")
 
 app = FastAPI(title="ResumeAI API", version="2.0.0")
 
@@ -77,10 +80,13 @@ async def serve_index():
         "Expires": "0"
     })
 
-@app.get("/ping")
-async def ping():
-    """Keep-alive endpoint — called every 10 min to prevent Render cold starts."""
-    return {"status": "ok", "message": "pong 🏓"}
+@app.get("/style.css", response_class=FileResponse)
+async def serve_style():
+    return FileResponse("static/style.css")
+
+@app.get("/app.js", response_class=FileResponse)
+async def serve_app():
+    return FileResponse("static/app.js")
 
 app.mount("/static", StaticFiles(directory="static"), name="static")
 
@@ -152,11 +158,53 @@ def _normalize_df(df: pd.DataFrame) -> List[dict]:
     return df.to_dict(orient="records")
 
 
+def _load_firestore_as_dataset() -> List[dict]:
+    """Load from Firestore 'candidates' collection."""
+    if not db:
+        return []
+    try:
+        docs = db.collection("candidates").stream()
+        return [doc.to_dict() for doc in docs]
+    except Exception as e:
+        print(f"⚠️ Firestore load failed: {e}")
+        return []
+
+
+def _save_dataset_to_firestore(dataset: List[dict]):
+    """Save dataset to Firestore using batches."""
+    if not db or not dataset:
+        return
+    try:
+        coll_ref = db.collection("candidates")
+        batch = db.batch()
+        count = 0
+        for i, item in enumerate(dataset):
+            doc_id = str(item.get("id", i))
+            doc_ref = coll_ref.document(doc_id)
+            batch.set(doc_ref, item)
+            count += 1
+            if count % 400 == 0:
+                batch.commit()
+                batch = db.batch()
+        if count % 400 != 0:
+            batch.commit()
+        print(f"✅ Successfully saved {len(dataset)} candidates to Firestore.")
+    except Exception as e:
+        print(f"❌ Failed to save to Firestore: {e}")
+
+
 def _auto_load_dataset():
-    """Try to load dataset from SQLite, then sample CSV, on startup."""
+    """Try to load dataset from Firestore, then SQLite, then sample CSV, on startup."""
     global _dataset
 
-    # 1. Try SQLite first
+    # 1. Try Firestore first
+    firestore_data = _load_firestore_as_dataset()
+    if firestore_data:
+        _dataset = firestore_data
+        print(f"✅ Auto-loaded {len(_dataset):,} candidates from Firestore.")
+        return
+
+    # 2. Try SQLite first
     try:
         db_path = "data/candidates.db"
         if os.path.exists(db_path):
@@ -239,6 +287,7 @@ async def upload_dataset(file: UploadFile = File(...)):
 
     try:
         _dataset = _normalize_df(df)
+        _save_dataset_to_firestore(_dataset)
     except ValueError as e:
         raise HTTPException(status_code=422, detail=str(e))
 
@@ -339,12 +388,33 @@ async def screen_candidates(req: ScreenRequest):
         # Remove bulky resume_text from response
         c.pop("resume_text", None)
 
-    return {
+    response = {
         "results": top,
         "total_screened": len(candidates),
         "used_bert": used_bert,
         "time_seconds": round(t_end - t_start, 2),
     }
+
+    if db:
+        import uuid
+        from datetime import datetime
+        try:
+            doc_id = "SCR-" + str(uuid.uuid4())[:8].upper()
+            db.collection("screening_history").document(doc_id).set({
+                "job_description": req.job_description,
+                "filters": {
+                    "algorithm": req.algorithm,
+                    "category": req.filter_category,
+                    "min_exp": req.min_exp
+                },
+                "total_screened": len(candidates),
+                "top_candidates": top,
+                "created_at": datetime.now().isoformat()
+            })
+        except Exception as e:
+            print(f"Failed to log screening: {e}")
+
+    return response
 
 
 class ResumeRequest(BaseModel):
@@ -395,6 +465,21 @@ async def analyze_resume(req: ResumeRequest):
             result["recommendation"] = "Consider for Interview"
         else:
             result["recommendation"] = "Not a Fit"
+
+    if db:
+        import uuid
+        from datetime import datetime
+        try:
+            doc_id = "RES-" + str(uuid.uuid4())[:8].upper()
+            db.collection("resume_analyses").document(doc_id).set({
+                "parsed": result["parsed"],
+                "category": result["rf_category"] if result["rf_confidence"] >= result["gb_confidence"] else result["gb_category"],
+                "match_scores": result.get("match_scores"),
+                "recommendation": result.get("recommendation"),
+                "created_at": datetime.now().isoformat()
+            })
+        except Exception as e:
+            print(f"Failed to log resume analysis: {e}")
 
     return result
 
@@ -604,7 +689,7 @@ async def ats_score_endpoint(req: ATSRequest):
     elif percentage >= 50: grade, grade_color = "C", "#fbbf24"
     else: grade, grade_color = "D", "#ef4444"
 
-    return {
+    response = {
         "ats_score": total, "max_score": max_total,
         "percentage": percentage, "grade": grade, "grade_color": grade_color,
         "breakdown": breakdown,
@@ -612,6 +697,23 @@ async def ats_score_endpoint(req: ATSRequest):
                           else "Good, but minor improvements recommended before submission." if percentage >= 55
                           else "Significant improvements needed — most ATS systems may filter this resume."
     }
+
+    if db:
+        import uuid
+        from datetime import datetime
+        try:
+            doc_id = "ATS-" + str(uuid.uuid4())[:8].upper()
+            db.collection("ats_scores").document(doc_id).set({
+                "score_percentage": percentage,
+                "grade": grade,
+                "job_description_provided": bool(req.job_description),
+                "breakdown_summary": {k: v["score"] for k, v in breakdown.items()},
+                "created_at": datetime.now().isoformat()
+            })
+        except Exception as e:
+            print(f"Failed to log ATS score: {e}")
+
+    return response
 
 
 @app.post("/api/interview-questions")
@@ -659,11 +761,27 @@ async def interview_questions_endpoint(req: ResumeRequest):
             ]
         }]
 
-    return {
+    response = {
         "questions": questions_out,
         "total_questions": sum(len(q["questions"]) for q in questions_out),
         "skills_analyzed": len(skills)
     }
+
+    if db:
+        import uuid
+        from datetime import datetime
+        try:
+            doc_id = "INT-" + str(uuid.uuid4())[:8].upper()
+            db.collection("interview_questions").document(doc_id).set({
+                "skills_analyzed": len(skills),
+                "total_questions": response["total_questions"],
+                "categories": [q["category"] for q in questions_out],
+                "created_at": datetime.now().isoformat()
+            })
+        except Exception as e:
+            print(f"Failed to log interview questions: {e}")
+
+    return response
 
 
 @app.post("/api/fraud-detect")
@@ -724,7 +842,7 @@ async def fraud_detect_endpoint(req: ResumeRequest):
     elif risk_score >= 25: risk_level, risk_color = "MEDIUM RISK", "#fbbf24"
     else: risk_level, risk_color = "LOW RISK", "#10b981"
 
-    return {
+    response = {
         "risk_score": risk_score,
         "risk_level": risk_level,
         "risk_color": risk_color,
@@ -735,6 +853,23 @@ async def fraud_detect_endpoint(req: ResumeRequest):
                           else "Some concerns detected — verify key claims independently." if risk_score >= 20
                           else "No significant fraud indicators. Resume appears authentic."
     }
+
+    if db:
+        import uuid
+        from datetime import datetime
+        try:
+            doc_id = "FRD-" + str(uuid.uuid4())[:8].upper()
+            db.collection("fraud_reports").document(doc_id).set({
+                "risk_score": risk_score,
+                "risk_level": risk_level,
+                "flags_count": len(flags),
+                "flags": [f["type"] for f in flags],
+                "created_at": datetime.now().isoformat()
+            })
+        except Exception as e:
+            print(f"Failed to log fraud detection: {e}")
+
+    return response
 
 
 @app.post("/api/resume-summary")
@@ -981,12 +1116,28 @@ async def job_recommendations_endpoint(req: ResumeRequest):
         level = "Senior" if exp >= 5 else "Mid-Level" if exp >= 3 else "Junior"
         adjusted.append({**job, "match": round(adj), "level": level})
 
-    return {
+    response = {
         "candidate_category": category,
         "recommendations": adjusted,
         "experience_years": exp,
         "ml_confidence": round(max(rf_conf, gb_conf) * 100, 1)
     }
+
+    if db:
+        import uuid
+        from datetime import datetime
+        try:
+            doc_id = "JOB-" + str(uuid.uuid4())[:8].upper()
+            db.collection("job_recommendations").document(doc_id).set({
+                "candidate_category": category,
+                "experience_years": exp,
+                "top_recommendation": adjusted[0]["title"] if adjusted else None,
+                "created_at": datetime.now().isoformat()
+            })
+        except Exception as e:
+            print(f"Failed to log job recommendation: {e}")
+
+    return response
 
 
 @app.post("/api/detect-language")
@@ -1086,7 +1237,7 @@ async def recommend_to_hr(req: HRRecommendRequest):
         f"🎯 Position: '{req.job_title}' | Average match score: {avg_score}% | Highest: {highest}% | Avg experience: {avg_exp} yrs.",
     ]
 
-    return {
+    report_data = {
         "success": True,
         "report_id": report_id,
         "submitted_at": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
@@ -1103,6 +1254,15 @@ async def recommend_to_hr(req: HRRecommendRequest):
         "message": f"{len(req.candidates)} candidate(s) successfully submitted to HR for '{req.job_title}'. Report ID: {report_id}.",
         "hr_status": "SUBMITTED"
     }
+
+    if db:
+        try:
+            db.collection("hr_reports").document(report_id).set(report_data)
+            print(f"✅ Saved HR Report {report_id} to Firestore.")
+        except Exception as e:
+            print(f"❌ Failed to save HR Report to Firestore: {e}")
+
+    return report_data
 
 if __name__ == "__main__":
     import uvicorn
