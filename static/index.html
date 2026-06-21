@@ -1,0 +1,743 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ResumeAI - AI-Powered Resume Screening Platform</title>
+  <meta name="description" content="Next-generation AI resume screening using BERT, NLP and ML to match candidates against job descriptions instantly." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="/static/style.css?v=300" />
+</head>
+<body>
+
+<canvas id="particle-canvas"></canvas>
+
+<nav id="navbar">
+  <div class="nav-brand">
+    <div class="brand-orb"></div>
+    <span>Resume<span class="brand-accent">AI</span></span>
+  </div>
+  <div class="nav-links">
+    <a class="nav-link active" data-page="home"      onclick="showPage('home')">Home</a>
+    <a class="nav-link"        data-page="upload"    onclick="showPage('upload')">Upload</a>
+    <a class="nav-link"        data-page="analytics" onclick="showPage('analytics')">Analytics</a>
+    <a class="nav-link"        data-page="screen"    onclick="showPage('screen')">Screen</a>
+    <a class="nav-link"        data-page="resume"    onclick="showPage('resume')">Single Resume</a>
+    <a class="nav-link"        data-page="ats"       onclick="showPage('ats')">ATS Score</a>
+    <a class="nav-link"        data-page="interview" onclick="showPage('interview')">Interview Q&amp;A</a>
+    <a class="nav-link"        data-page="fraud"     onclick="showPage('fraud')">Fraud Detect</a>
+    <a class="nav-link"        data-page="jobs"      onclick="showPage('jobs')">Job Match</a>
+    <a class="nav-link"        data-page="metrics"   onclick="showPage('metrics')">ML Metrics</a>
+    <a class="nav-link"        data-page="hr"        onclick="showPage('hr')" style="color:#fbbf24;border:1px solid rgba(251,191,36,0.3);border-radius:6px;padding:0.4rem 0.9rem;">📋 HR Recommend</a>
+  </div>
+  <div class="nav-status" id="nav-status">
+    <span class="status-dot inactive"></span>
+    <span id="status-label">No Dataset</span>
+  </div>
+</nav>
+
+<main id="main-content">
+
+  <!-- HOME -->
+  <section id="page-home" class="page active">
+    <div class="hero">
+      <div class="hero-badge">&#10024; Capstone Project &mdash; Team 7</div>
+      <h1 class="hero-title">
+        Screen Resumes with<br/>
+        <span class="gradient-text animated-gradient">AI Intelligence</span>
+      </h1>
+      <p class="hero-sub">
+        Upload your candidate dataset, define a job description, and let BERT-powered NLP rank and match the best fits in seconds.
+      </p>
+      <div class="hero-cta">
+        <button class="btn-primary glow-pulse" onclick="showPage('upload')">
+          <span>&#128640;</span> Upload Your Dataset
+        </button>
+        <button class="btn-ghost" onclick="showPage('screen')">
+          <span>&#128269;</span> Start Screening
+        </button>
+      </div>
+
+      <div class="hero-stats" id="hero-stats">
+        <div class="stat-pill" id="stat-total"><span class="pill-val">&#8212;</span><span class="pill-label">Candidates</span></div>
+        <div class="stat-pill" id="stat-avg"><span class="pill-val">&#8212;</span><span class="pill-label">Avg Exp (yrs)</span></div>
+        <div class="stat-pill" id="stat-cats"><span class="pill-val">&#8212;</span><span class="pill-label">Categories</span></div>
+        <div class="stat-pill"><span class="pill-val">96.8%</span><span class="pill-label">Model Accuracy</span></div>
+      </div>
+
+      <div class="tech-stack">
+        <span class="tech-tag">BERT</span>
+        <span class="tech-tag">TF-IDF</span>
+        <span class="tech-tag">Random Forest</span>
+        <span class="tech-tag">Gradient Boosting</span>
+        <span class="tech-tag">FastAPI</span>
+        <span class="tech-tag">NLP</span>
+      </div>
+
+      <div class="feature-grid">
+        <div class="feature-card" onclick="showPage('screen')">
+          <div class="feature-icon">&#128269;</div>
+          <div class="feature-title">Candidate Screening</div>
+          <div class="feature-desc">Rank 5,000+ resumes against any JD using BERT + TF-IDF hybrid scoring.</div>
+        </div>
+        <div class="feature-card" onclick="showPage('ats')">
+          <div class="feature-icon">&#128203;</div>
+          <div class="feature-title">ATS Compatibility</div>
+          <div class="feature-desc">Score resumes for ATS compatibility across 6 criteria with detailed breakdown.</div>
+        </div>
+        <div class="feature-card" onclick="showPage('interview')">
+          <div class="feature-icon">&#127919;</div>
+          <div class="feature-title">Interview Questions</div>
+          <div class="feature-desc">Auto-generate targeted interview questions tailored to a candidate's skills and level.</div>
+        </div>
+        <div class="feature-card" onclick="showPage('fraud')">
+          <div class="feature-icon">&#128737;</div>
+          <div class="feature-title">Fraud Detection</div>
+          <div class="feature-desc">Detect keyword stuffing, experience inflation, and duplicate submissions instantly.</div>
+        </div>
+        <div class="feature-card" onclick="showPage('jobs')">
+          <div class="feature-icon">&#128188;</div>
+          <div class="feature-title">Job Recommendations</div>
+          <div class="feature-desc">Suggest best-fit job titles and companies based on ML classification.</div>
+        </div>
+        <div class="feature-card" onclick="showPage('resume')">
+          <div class="feature-icon">&#129302;</div>
+          <div class="feature-title">AI Profile Summary</div>
+          <div class="feature-desc">Generate an AI-written candidate profile with explainable match reasoning.</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- UPLOAD DATASET -->
+  <section id="page-upload" class="page">
+    <div class="page-header">
+      <h2>&#128194; Upload Your Dataset</h2>
+      <p>Upload a CSV file containing candidate resumes. The file must include <code>name</code>, <code>email</code>, and <code>resume_text</code> columns.</p>
+    </div>
+
+    <div class="upload-zone" id="upload-zone">
+      <div class="upload-icon">
+        <svg viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M32 8L32 40M32 8L20 20M32 8L44 20" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+          <path d="M8 48C8 48 8 56 32 56C56 56 56 48 56 48" stroke="currentColor" stroke-width="3" stroke-linecap="round"/>
+        </svg>
+      </div>
+      <div class="upload-text">
+        <strong>Drag &amp; Drop your CSV here</strong>
+        <span>or click to browse</span>
+      </div>
+      <input type="file" id="csv-file-input" accept=".csv" style="display:none" />
+      <button class="btn-primary" id="browse-btn" onclick="document.getElementById('csv-file-input').click()">Browse File</button>
+    </div>
+
+    <div id="upload-progress" class="upload-progress hidden">
+      <div class="progress-bar-wrap">
+        <div class="progress-bar-fill" id="progress-fill"></div>
+      </div>
+      <p id="upload-status-msg">Uploading...</p>
+    </div>
+
+    <div id="upload-result" class="glass-card success-card hidden">
+      <div class="success-icon">&#9989;</div>
+      <div>
+        <h3 id="upload-success-title">Dataset Loaded!</h3>
+        <p id="upload-success-msg"></p>
+      </div>
+      <button class="btn-ghost" onclick="showPage('analytics')">View Analytics &#8594;</button>
+    </div>
+
+    <div class="csv-format-card glass-card">
+      <h3>&#128203; Required CSV Format</h3>
+      <div class="format-columns">
+        <div class="col-required">
+          <h4>Required Columns</h4>
+          <code>name</code>
+          <code>email</code>
+          <code>resume_text</code>
+        </div>
+        <div class="col-optional">
+          <h4>Optional Columns</h4>
+          <code>phone</code>
+          <code>category</code>
+          <code>experience_years</code>
+          <code>education_degree</code>
+          <code>education_institution</code>
+          <code>skills</code>
+        </div>
+      </div>
+      <p class="format-note">&#128161; If <code>skills</code> is missing, they will be auto-extracted from <code>resume_text</code> using NLP.</p>
+    </div>
+  </section>
+
+  <!-- ANALYTICS -->
+  <section id="page-analytics" class="page">
+    <div class="page-header">
+      <h2>&#128202; Analytics Dashboard</h2>
+      <p>Overview of the loaded candidate database.</p>
+    </div>
+
+    <div id="analytics-no-data" class="empty-state hidden">
+      <div class="empty-icon">&#128194;</div>
+      <h3>No Dataset Loaded</h3>
+      <p>Upload a CSV to see analytics, or we will load from the built-in database.</p>
+      <button class="btn-primary" onclick="showPage('upload')">Upload Dataset</button>
+    </div>
+
+    <div id="analytics-content">
+      <div class="metrics-row" id="analytics-metrics">
+        <div class="metric-card glass-card">
+          <div class="metric-icon">&#128101;</div>
+          <div class="metric-val" id="m-total">&#8212;</div>
+          <div class="metric-label">Total Candidates</div>
+        </div>
+        <div class="metric-card glass-card">
+          <div class="metric-icon">&#128197;</div>
+          <div class="metric-val" id="m-exp">&#8212;</div>
+          <div class="metric-label">Avg Experience (yrs)</div>
+        </div>
+        <div class="metric-card glass-card">
+          <div class="metric-icon">&#127991;</div>
+          <div class="metric-val" id="m-cats">&#8212;</div>
+          <div class="metric-label">Job Categories</div>
+        </div>
+        <div class="metric-card glass-card">
+          <div class="metric-icon">&#127919;</div>
+          <div class="metric-val" id="m-accuracy">96.8%</div>
+          <div class="metric-label">Model Accuracy</div>
+        </div>
+      </div>
+
+      <div class="charts-grid">
+        <div class="glass-card chart-card">
+          <h3>Category Distribution</h3>
+          <div id="cat-chart" class="bar-chart-container"></div>
+        </div>
+        <div class="glass-card chart-card">
+          <h3>Experience Bands</h3>
+          <div id="exp-chart" class="bar-chart-container"></div>
+        </div>
+      </div>
+
+      <div class="adv-analytics-grid hidden" id="adv-analytics-grid">
+        <div class="glass-card chart-card">
+          <h3>&#127942; Top Skills in Database</h3>
+          <div id="skills-chart" class="bar-chart-container"></div>
+        </div>
+        <div class="glass-card chart-card">
+          <h3>&#128202; Hiring Funnel</h3>
+          <div id="funnel-chart"></div>
+        </div>
+        <div class="glass-card chart-card" style="grid-column:1/-1">
+          <h3>&#128161; Avg Experience by Category</h3>
+          <div id="cat-exp-chart" class="bar-chart-container"></div>
+        </div>
+      </div>
+      <button class="btn-ghost" id="load-adv-btn" onclick="loadAdvancedAnalytics()" style="margin-top:1.5rem;">
+        &#10024; Load Advanced Analytics
+      </button>
+    </div>
+  </section>
+
+  <!-- SCREEN -->
+  <section id="page-screen" class="page">
+    <div class="page-header">
+      <h2>&#128269; Candidate Screening</h2>
+      <p>Paste a job description and rank all candidates using NLP + BERT semantic similarity.</p>
+    </div>
+
+    <div class="screen-layout">
+      <div class="glass-card screen-input-card">
+        <h3>Job Description</h3>
+        <select id="jd-template" onchange="applyJdTemplate()">
+          <option value="">Load a Template</option>
+          <option value="swe">Senior Full-Stack Engineer</option>
+          <option value="ds">Senior Data Scientist</option>
+          <option value="pm">B2B Product Manager</option>
+          <option value="mkt">Digital Marketing Specialist</option>
+          <option value="fin">Senior Financial Analyst</option>
+        </select>
+        <textarea id="jd-input" placeholder="Paste the job description here..." rows="9"></textarea>
+
+        <div class="filter-grid">
+          <div class="filter-group">
+            <label>Algorithm</label>
+            <select id="algo-select">
+              <option value="hybrid">Ensemble Hybrid (BERT + Skills)</option>
+              <option value="bert">BERT Semantic Matcher</option>
+              <option value="tfidf">TF-IDF Cosine Matcher</option>
+              <option value="keyword">Keyword / Skills Count</option>
+            </select>
+          </div>
+          <div class="filter-group">
+            <label>Category Filter</label>
+            <select id="cat-filter">
+              <option value="All">All Categories</option>
+            </select>
+          </div>
+          <div class="filter-group">
+            <label>Min Experience: <span id="exp-label">0</span> yrs</label>
+            <input type="range" id="exp-slider" min="0" max="15" value="0" oninput="document.getElementById('exp-label').textContent=this.value" />
+          </div>
+          <div class="filter-group">
+            <label>Max Results</label>
+            <input type="number" id="max-results" value="10" min="5" max="100" />
+          </div>
+        </div>
+
+        <button class="btn-primary btn-full" id="screen-btn" onclick="runScreening()">
+          <span>&#128640;</span> Screen Candidates
+        </button>
+      </div>
+
+      <div id="screen-results" class="screen-results hidden">
+        <div class="results-header" id="results-header"></div>
+        <div id="leaderboard"></div>
+        <div class="screen-actions">
+          <button class="btn-ghost btn-export" id="export-btn" onclick="exportCSV()">&#128229; Export to CSV</button>
+          <button class="btn-ghost" id="notify-btn" onclick="notifyCandidates()">&#128231; Notify Shortlist</button>
+        </div>
+        <div id="notify-result" class="hidden"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- SINGLE RESUME -->
+  <section id="page-resume" class="page">
+    <div class="page-header">
+      <h2>&#128196; Single Resume Analyzer</h2>
+      <p>Paste or upload a single resume for instant AI classification, job match scoring, and a full candidate profile.</p>
+    </div>
+
+    <div class="resume-layout">
+      <div class="glass-card resume-input-card">
+        <h3>Step 1 &mdash; Resume Input</h3>
+        <div class="resume-tabs">
+          <button class="tab-btn active" onclick="switchResumeTab('paste')">&#9999; Paste Text</button>
+          <button class="tab-btn" onclick="switchResumeTab('upload')">&#128206; Upload .txt</button>
+        </div>
+        <div id="resume-paste-tab">
+          <textarea id="resume-text-input" placeholder="Paste candidate resume text here..." rows="14"></textarea>
+        </div>
+        <div id="resume-upload-tab" class="hidden">
+          <div class="mini-upload-zone" onclick="document.getElementById('resume-file-input').click()">
+            <span>Click to upload a .txt file</span>
+            <input type="file" id="resume-file-input" accept=".txt" style="display:none" onchange="loadResumeFile(event)" />
+          </div>
+          <textarea id="resume-file-preview" placeholder="File content will appear here..." rows="10" disabled></textarea>
+        </div>
+
+        <h3 style="margin-top:1.5rem;">Step 2 &mdash; Compare Against Job Description</h3>
+        <select id="resume-jd-template" onchange="applyResumeJdTemplate()">
+          <option value="">Load a Template</option>
+          <option value="swe">Senior Full-Stack Engineer</option>
+          <option value="ds">Senior Data Scientist</option>
+          <option value="pm">B2B Product Manager</option>
+          <option value="mkt">Digital Marketing Specialist</option>
+          <option value="fin">Senior Financial Analyst</option>
+        </select>
+        <textarea id="resume-jd-input" placeholder="(Optional) Paste job description to get a match score..." rows="5"></textarea>
+
+        <button class="btn-primary btn-full" id="analyze-btn" onclick="analyzeResume()">
+          <span>&#128302;</span> Analyze Resume
+        </button>
+      </div>
+
+      <div id="resume-results" class="resume-results hidden">
+        <div class="glass-card resume-result-card">
+          <h3>&#128100; Parsed Information</h3>
+          <div class="parsed-grid" id="parsed-grid"></div>
+        </div>
+        <div class="glass-card resume-result-card">
+          <h3>&#128302; ML Classification</h3>
+          <div id="ml-predictions"></div>
+        </div>
+        <div class="glass-card resume-result-card" id="match-score-card">
+          <h3>&#128202; Match Score</h3>
+          <div id="match-score-content"></div>
+        </div>
+        <div class="glass-card resume-result-card">
+          <h3>&#128295; Extracted Skills</h3>
+          <div id="extracted-skills"></div>
+        </div>
+        <div class="glass-card resume-result-card" id="ai-summary-card">
+          <h3>&#129302; AI Candidate Summary</h3>
+          <div id="ai-summary-content" style="color:var(--text-muted);font-size:0.85rem;">Click below to generate an AI profile summary.</div>
+          <button class="btn-ghost" style="margin-top:0.75rem;width:100%;justify-content:center;" onclick="generateSummary()">&#10024; Generate AI Summary</button>
+        </div>
+        <div class="glass-card resume-result-card" id="xai-card">
+          <h3>&#129504; Explainable AI Recommendation</h3>
+          <div id="xai-content" style="color:var(--text-muted);font-size:0.85rem;">Requires a job description above. Click to explain the AI decision.</div>
+          <button class="btn-ghost" style="margin-top:0.75rem;width:100%;justify-content:center;" onclick="explainRecommendation()">&#128269; Explain AI Decision</button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ATS SCORE -->
+  <section id="page-ats" class="page">
+    <div class="page-header">
+      <h2>&#128203; ATS Compatibility Scorer</h2>
+      <p>Check how well a resume will pass ATS filters across 6 key criteria. Optionally paste a JD for keyword matching.</p>
+    </div>
+
+    <div class="ats-layout">
+      <div class="glass-card ats-input-card">
+        <h3>Resume Text</h3>
+        <div class="resume-tabs">
+          <button class="tab-btn active" onclick="switchAtsTab('paste')">&#9999; Paste Text</button>
+          <button class="tab-btn" onclick="switchAtsTab('upload')">&#128206; Upload .txt</button>
+        </div>
+        <div id="ats-paste-tab">
+          <textarea id="ats-resume-input" placeholder="Paste candidate resume text here..." rows="14"></textarea>
+        </div>
+        <div id="ats-upload-tab" class="hidden">
+          <div class="mini-upload-zone" onclick="document.getElementById('ats-file-input').click()">
+            <span>Click to upload a .txt file</span>
+            <input type="file" id="ats-file-input" accept=".txt" style="display:none" onchange="loadAtsFile(event)" />
+          </div>
+          <textarea id="ats-file-preview" placeholder="File content will appear here..." rows="10" disabled></textarea>
+        </div>
+
+        <h3 style="margin-top:1.5rem;">Job Description (Optional)</h3>
+        <select id="ats-jd-template" onchange="applyAtsJdTemplate()">
+          <option value="">Load a Template</option>
+          <option value="swe">Senior Full-Stack Engineer</option>
+          <option value="ds">Senior Data Scientist</option>
+          <option value="pm">B2B Product Manager</option>
+          <option value="mkt">Digital Marketing Specialist</option>
+          <option value="fin">Senior Financial Analyst</option>
+        </select>
+        <textarea id="ats-jd-input" placeholder="(Optional) Paste job description for keyword matching..." rows="5"></textarea>
+
+        <button class="btn-primary btn-full" id="ats-btn" onclick="runAtsScore()">
+          <span>&#128203;</span> Calculate ATS Score
+        </button>
+      </div>
+
+      <div id="ats-results" class="ats-results hidden">
+        <div class="glass-card ats-score-main">
+          <div class="ats-grade-ring" id="ats-grade-ring"></div>
+          <div id="ats-recommendation" style="margin-top:1rem;font-size:0.9rem;color:var(--text-secondary);text-align:center;"></div>
+        </div>
+        <div id="ats-breakdown"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- INTERVIEW QUESTIONS -->
+  <section id="page-interview" class="page">
+    <div class="page-header">
+      <h2>&#127919; Interview Question Generator</h2>
+      <p>Paste a resume and optional job description to auto-generate targeted technical interview questions by skill and seniority level.</p>
+    </div>
+
+    <div class="ats-layout">
+      <div class="glass-card ats-input-card">
+        <h3>Candidate Resume</h3>
+        <textarea id="iq-resume-input" placeholder="Paste candidate resume text here..." rows="14"></textarea>
+
+        <h3 style="margin-top:1.5rem;">Job Description (Optional)</h3>
+        <select id="iq-jd-template" onchange="applyIqJdTemplate()">
+          <option value="">Load a Template</option>
+          <option value="swe">Senior Full-Stack Engineer</option>
+          <option value="ds">Senior Data Scientist</option>
+          <option value="pm">B2B Product Manager</option>
+          <option value="mkt">Digital Marketing Specialist</option>
+          <option value="fin">Senior Financial Analyst</option>
+        </select>
+        <textarea id="iq-jd-input" placeholder="(Optional) Paste job description to prioritize relevant questions..." rows="5"></textarea>
+
+        <button class="btn-primary btn-full" id="iq-btn" onclick="runInterviewQuestions()">
+          <span>&#127919;</span> Generate Interview Questions
+        </button>
+      </div>
+
+      <div id="iq-results" class="iq-results hidden">
+        <div class="glass-card iq-summary" id="iq-summary"></div>
+        <div id="iq-questions-list"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- FRAUD DETECTION -->
+  <section id="page-fraud" class="page">
+    <div class="page-header">
+      <h2>&#128737; Resume Fraud Detector</h2>
+      <p>Detect keyword stuffing, experience inflation, excessive self-promotion, and duplicate submissions with AI risk analysis.</p>
+    </div>
+
+    <div class="ats-layout">
+      <div class="glass-card ats-input-card">
+        <h3>Resume to Inspect</h3>
+        <textarea id="fraud-resume-input" placeholder="Paste candidate resume text here..." rows="22"></textarea>
+
+        <button class="btn-primary btn-full" id="fraud-btn" onclick="runFraudDetect()">
+          <span>&#128737;</span> Run Fraud Analysis
+        </button>
+      </div>
+
+      <div id="fraud-results" class="fraud-results hidden">
+        <div class="glass-card fraud-score-main" id="fraud-score-main"></div>
+        <div id="fraud-flags-list"></div>
+        <div class="glass-card hidden" id="fraud-recommendation" style="margin-top:1rem;padding:1.25rem;"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- JOB RECOMMENDATIONS -->
+  <section id="page-jobs" class="page">
+    <div class="page-header">
+      <h2>&#128188; Job Title Recommender</h2>
+      <p>Get AI-powered job title recommendations, candidate profile, and language detection based on ML classification.</p>
+    </div>
+
+    <div class="ats-layout">
+      <div class="glass-card ats-input-card">
+        <h3>Candidate Resume</h3>
+        <textarea id="jobs-resume-input" placeholder="Paste candidate resume text here..." rows="16"></textarea>
+        <h3 style="margin-top:1rem;">Job Description (Optional)</h3>
+        <textarea id="jobs-jd-input" placeholder="(Optional) Paste job description for tailored summary..." rows="5"></textarea>
+
+        <button class="btn-primary btn-full" id="jobs-btn" onclick="runJobRecommendations()">
+          <span>&#128188;</span> Get Job Recommendations
+        </button>
+      </div>
+
+      <div id="jobs-results" class="jobs-results hidden">
+        <div class="glass-card" id="jobs-profile-card"></div>
+        <div id="jobs-list"></div>
+        <div class="glass-card hidden" id="lang-detect-card" style="margin-top:1rem;padding:1.25rem;"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- METRICS -->
+  <section id="page-metrics" class="page">
+    <div class="page-header">
+      <h2>&#128200; ML Model Performance</h2>
+      <p>Random Forest vs Gradient Boosting &mdash; accuracy, training time, and classification reports.</p>
+    </div>
+
+    <div id="metrics-no-data" class="empty-state hidden">
+      <div class="empty-icon">&#128202;</div>
+      <h3>No Metrics Available</h3>
+      <p>Model metrics file (models/metrics.json) not found.</p>
+    </div>
+
+    <div id="metrics-content">
+      <div class="metrics-row">
+        <div class="glass-card model-card rf-card">
+          <div class="model-badge">&#127807; Random Forest</div>
+          <div class="model-accuracy" id="rf-accuracy">&#8212;</div>
+          <div class="model-sub">Validation Accuracy</div>
+          <div class="model-time" id="rf-time">&#8212;</div>
+        </div>
+        <div class="glass-card model-card gb-card">
+          <div class="model-badge">&#9889; Gradient Boosting</div>
+          <div class="model-accuracy" id="gb-accuracy">&#8212;</div>
+          <div class="model-sub">Validation Accuracy</div>
+          <div class="model-time" id="gb-time">&#8212;</div>
+        </div>
+      </div>
+
+      <div class="tabs-container">
+        <div class="tabs-header">
+          <button class="tab-btn active" id="tab-rf" onclick="switchMetricsTab('rf')">&#127807; Random Forest</button>
+          <button class="tab-btn" id="tab-gb" onclick="switchMetricsTab('gb')">&#9889; Gradient Boosting</button>
+        </div>
+        <div id="metrics-tab-rf" class="metrics-tab-content glass-card">
+          <h3>Classification Report</h3>
+          <div id="rf-report" class="report-table"></div>
+          <h3 style="margin-top:2rem;">Confusion Matrix</h3>
+          <div id="rf-matrix" class="confusion-matrix"></div>
+        </div>
+        <div id="metrics-tab-gb" class="metrics-tab-content glass-card hidden">
+          <h3>Classification Report</h3>
+          <div id="gb-report" class="report-table"></div>
+          <h3 style="margin-top:2rem;">Confusion Matrix</h3>
+          <div id="gb-matrix" class="confusion-matrix"></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── HR RECOMMEND PAGE ──────────────────────── -->
+  <section id="page-hr" class="page">
+    <div class="page-header">
+      <h2>📋 Recommend to HR</h2>
+      <p>Screen candidates, shortlist the best fits, and send a professional HR report in one click.</p>
+    </div>
+
+    <!-- How it works steps -->
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:1.25rem;margin-bottom:2rem;">
+      <div class="glass-card" style="border-color:rgba(251,191,36,0.2);text-align:center;padding:2rem 1.5rem;">
+        <div style="font-size:2.5rem;margin-bottom:0.75rem;">🔍</div>
+        <div style="font-weight:800;font-size:1rem;margin-bottom:0.4rem;">Step 1 — Screen</div>
+        <div style="font-size:0.84rem;color:var(--text-secondary);line-height:1.6;">Go to the <strong>Screen</strong> tab, paste a job description, and click <strong>Screen Resumes</strong> to get a ranked candidate list.</div>
+      </div>
+      <div class="glass-card" style="border-color:rgba(251,191,36,0.2);text-align:center;padding:2rem 1.5rem;">
+        <div style="font-size:2.5rem;margin-bottom:0.75rem;">📋</div>
+        <div style="font-weight:800;font-size:1rem;margin-bottom:0.4rem;">Step 2 — Recommend</div>
+        <div style="font-size:0.84rem;color:var(--text-secondary);line-height:1.6;">On each candidate card, click the <strong style="color:#fbbf24;">📋 Recommend to HR</strong> button. The button turns green when added to the shortlist.</div>
+      </div>
+      <div class="glass-card" style="border-color:rgba(251,191,36,0.2);text-align:center;padding:2rem 1.5rem;">
+        <div style="font-size:2.5rem;margin-bottom:0.75rem;">📤</div>
+        <div style="font-weight:800;font-size:1rem;margin-bottom:0.4rem;">Step 3 — Send to HR</div>
+        <div style="font-size:0.84rem;color:var(--text-secondary);line-height:1.6;">Click the floating <strong style="color:#fbbf24;">📋 HR Shortlist</strong> badge (bottom-right corner) → review shortlist → click <strong>Send to HR</strong>.</div>
+      </div>
+      <div class="glass-card" style="border-color:rgba(251,191,36,0.2);text-align:center;padding:2rem 1.5rem;">
+        <div style="font-size:2.5rem;margin-bottom:0.75rem;">⬇️</div>
+        <div style="font-weight:800;font-size:1rem;margin-bottom:0.4rem;">Step 4 — Download Report</div>
+        <div style="font-size:0.84rem;color:var(--text-secondary);line-height:1.6;">A full HR Report Modal appears with a unique Report ID, candidate stats, next-step actions. Download as CSV anytime.</div>
+      </div>
+    </div>
+
+    <!-- Current shortlist preview -->
+    <div class="glass-card" style="margin-bottom:1.5rem;">
+      <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:1rem;">
+        <div>
+          <div style="font-size:1rem;font-weight:700;margin-bottom:0.25rem;">Current HR Shortlist</div>
+          <div style="font-size:0.84rem;color:var(--text-secondary);" id="hr-page-count">No candidates added yet. Run a screening first.</div>
+        </div>
+        <div style="display:flex;gap:0.75rem;flex-wrap:wrap;">
+          <button class="btn-ghost" onclick="openHrPanel()" id="hr-page-view-btn">
+            📋 View Shortlist
+          </button>
+          <button class="btn-primary" onclick="showPage('screen')">
+            🔍 Go to Screen &amp; Start
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Feature highlights -->
+    <div class="glass-card">
+      <div style="font-size:0.8rem;text-transform:uppercase;letter-spacing:0.06em;color:var(--text-muted);font-weight:600;margin-bottom:1rem;">What's included in the HR Report</div>
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:0.75rem;">
+        <div style="display:flex;align-items:center;gap:0.6rem;font-size:0.85rem;"><span style="color:var(--green);">✓</span> Unique HR Report ID</div>
+        <div style="display:flex;align-items:center;gap:0.6rem;font-size:0.85rem;"><span style="color:var(--green);">✓</span> Average match score &amp; stats</div>
+        <div style="display:flex;align-items:center;gap:0.6rem;font-size:0.85rem;"><span style="color:var(--green);">✓</span> Ranked candidate list</div>
+        <div style="display:flex;align-items:center;gap:0.6rem;font-size:0.85rem;"><span style="color:var(--green);">✓</span> Recommendation badges</div>
+        <div style="display:flex;align-items:center;gap:0.6rem;font-size:0.85rem;"><span style="color:var(--green);">✓</span> Matched &amp; missing skills</div>
+        <div style="display:flex;align-items:center;gap:0.6rem;font-size:0.85rem;"><span style="color:var(--green);">✓</span> Recruiter notes per candidate</div>
+        <div style="display:flex;align-items:center;gap:0.6rem;font-size:0.85rem;"><span style="color:var(--green);">✓</span> Next-step action items</div>
+        <div style="display:flex;align-items:center;gap:0.6rem;font-size:0.85rem;"><span style="color:var(--green);">✓</span> CSV download</div>
+      </div>
+    </div>
+  </section>
+
+</main>
+
+<!-- ══════════════════════════════════════════
+     MODULE 3 — HR Shortlist Panel & Modal
+     ══════════════════════════════════════════ -->
+
+<!-- Floating HR Shortlist Button -->
+<div id="hr-shortlist-badge">
+  <button id="hr-shortlist-btn" onclick="openHrPanel()">
+    📋 HR Shortlist &nbsp;<span class="hr-badge-count" id="hr-badge-count">0</span>
+  </button>
+</div>
+
+<!-- HR Slide-over Overlay -->
+<div id="hr-panel-overlay" onclick="closeHrPanel()"></div>
+
+<!-- HR Slide-over Panel -->
+<div id="hr-panel">
+  <div class="hr-panel-header">
+    <div class="hr-panel-title">
+      <div class="hr-panel-title-icon">📋</div>
+      <div>
+        <h3>HR Shortlist</h3>
+        <div style="font-size:0.75rem;color:var(--text-muted);margin-top:0.1rem;">Module 3 — Recommend to HR</div>
+      </div>
+    </div>
+    <button class="hr-panel-close" onclick="closeHrPanel()">✕</button>
+  </div>
+
+  <div class="hr-panel-meta" id="hr-panel-meta">
+    <strong id="hr-shortlist-count">0</strong> candidates recommended for HR review
+  </div>
+
+  <div class="hr-candidates-list" id="hr-candidates-list">
+    <div class="hr-empty-state" id="hr-empty-state">
+      <div class="empty-icon">📭</div>
+      <p>No candidates added yet.<br/>Run a screening and click <strong>📋 Recommend to HR</strong> on any candidate card.</p>
+    </div>
+  </div>
+
+  <div class="hr-panel-footer">
+    <div class="hr-jd-context" id="hr-jd-context">
+      <span>📄</span>
+      <span>Position: <strong id="hr-jd-title-display">—</strong></span>
+    </div>
+    <div class="hr-footer-actions">
+      <button class="btn-clear-hr" onclick="clearHrShortlist()">🗑 Clear All</button>
+      <button class="btn-send-hr" id="send-to-hr-btn" onclick="sendToHR()" disabled>
+        📤 Send to HR
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- HR Report Modal -->
+<div id="hr-report-modal">
+  <div class="hr-report-box">
+    <div class="hr-report-header">
+      <div>
+        <h3>✅ HR Recommendation Report</h3>
+        <div style="font-size:0.75rem;color:var(--text-muted);margin-top:0.2rem;" id="hr-report-timestamp"></div>
+      </div>
+      <button class="hr-panel-close" onclick="closeHrReport()" style="width:auto;padding:0 0.75rem;font-size:0.85rem;">Close ✕</button>
+    </div>
+    <div class="hr-report-body" id="hr-report-body">
+      <!-- dynamically populated -->
+    </div>
+    <div class="hr-report-footer" id="hr-report-footer">
+      <button class="btn-send-hr" onclick="downloadHrReport()" style="flex:initial;padding:0.65rem 1.25rem;">
+        ⬇️ Download Report
+      </button>
+      <button class="btn-ghost" onclick="closeHrReport()">Close</button>
+    </div>
+  </div>
+</div>
+
+
+<div id="loading-overlay" class="hidden">
+  <div class="loader-content">
+    <div class="loader-orbs">
+      <div class="orb orb1"></div>
+      <div class="orb orb2"></div>
+      <div class="orb orb3"></div>
+    </div>
+    <p id="loader-text">Processing...</p>
+  </div>
+</div>
+
+<div id="toast-container"></div>
+
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.9.0/firebase-app.js";
+  import { getAnalytics } from "https://www.gstatic.com/firebasejs/10.9.0/firebase-analytics.js";
+
+  const firebaseConfig = {
+    apiKey: "AIzaSyAmARoHX0Hkrh0pGwN4o76yYD4ZobUlOOk",
+    authDomain: "ai-resume-872f9.firebaseapp.com",
+    projectId: "ai-resume-872f9",
+    storageBucket: "ai-resume-872f9.firebasestorage.app",
+    messagingSenderId: "949643640117",
+    appId: "1:949643640117:web:5b52d788ebe866b380a07c",
+    measurementId: "G-FX4LXTSTRH"
+  };
+
+  // Initialize Firebase
+  const app = initializeApp(firebaseConfig);
+  const analytics = getAnalytics(app);
+  console.log("Firebase Web SDK initialized successfully!");
+</script>
+
+<script src="/static/app.js?v=300"></script>
+</body>
+</html>

@@ -1,0 +1,11 @@
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.env
+*.env
+serviceAccountKey.json
+.firebase/
+*.log
+.DS_Store
+Thumbs.db

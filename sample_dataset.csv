@@ -1,0 +1,451 @@
+name,email,phone,category,experience_years,education_degree,education_institution,skills,resume_text
+James Smith,james.smith42@example.com,+1-312-555-7821,Software Engineering,7,MS in Computer Science,MIT,"Python, React, Docker, Kubernetes, AWS, SQL, Git, CI/CD, Microservices","NAME: James Smith
+CONTACT: james.smith42@example.com | +1-312-555-7821
+OBJECTIVE
+Innovative Senior Software Engineer with 7 years of experience specializing in building scalable web applications and distributed systems.
+
+EXPERIENCE
+Senior Software Engineer at Company A (2020 - 2026)
+- Architected and deployed microservices using Python and Docker, reducing server latency by 42%.
+- Designed and implemented high-throughput REST APIs with React, handling over 85k daily active users.
+
+Software Engineer at Company B (2017 - 2020)
+- Led migration of legacy systems to Kubernetes on AWS, improving deployment efficiency by 60%.
+- Collaborated with cross-functional teams to integrate SQL with NoSQL databases, saving database overhead by 35%.
+
+EDUCATION
+MS in Computer Science - MIT
+
+SKILLS
+Python, React, Docker, Kubernetes, AWS, SQL, Git, CI/CD, Microservices"
+Mary Johnson,mary.johnson91@example.com,+1-415-555-3342,Data Science & AI,5,MS in Data Science & Analytics,Stanford University,"Python, TensorFlow, PyTorch, NLP, BERT, Machine Learning, Pandas, SQL, Scikit-Learn","NAME: Mary Johnson
+CONTACT: mary.johnson91@example.com | +1-415-555-3342
+OBJECTIVE
+Data Scientist with 5 years of experience turning complex datasets into actionable business insights. Highly skilled in TensorFlow and BERT.
+
+EXPERIENCE
+Senior Data Scientist at Company A (2022 - 2026)
+- Developed predictive models using PyTorch and NLP that improved forecasting accuracy by 67%.
+- Built end-to-end NLP pipelines using BERT and Transformers, reducing text processing time by 55%.
+
+Data Scientist at Company B (2021 - 2022)
+- Designed and optimized recommendation algorithms using Scikit-Learn, resulting in a 38% increase in user engagement.
+
+EDUCATION
+MS in Data Science & Analytics - Stanford University
+
+SKILLS
+Python, TensorFlow, PyTorch, NLP, BERT, Machine Learning, Pandas, SQL, Scikit-Learn"
+Robert Garcia,robert.garcia55@example.com,+1-646-555-9901,Product Management,6,MBA,Harvard University,"Product Roadmap, Agile, Scrum, Jira, User Research, A/B Testing, SQL, Figma, KPIs, PRDs","NAME: Robert Garcia
+CONTACT: robert.garcia55@example.com | +1-646-555-9901
+OBJECTIVE
+Product Manager with 6 years of experience managing SaaS products from concept to launch. Strong focus on user-centric design and agile execution.
+
+EXPERIENCE
+Senior Product Manager at Company A (2021 - 2026)
+- Defined the product strategy and roadmap for a new SaaS product, achieving $850k ARR within the first year.
+- Managed cross-functional teams of 12 engineers and designers using Agile and Scrum methodologies.
+
+Product Manager at Company B (2020 - 2021)
+- Conducted 120+ customer interviews and user research sessions, translating feedback into successful PRDs.
+- Optimized onboarding funnel using Jira and A/B Testing, boosting user conversion by 34%.
+
+EDUCATION
+MBA - Harvard University
+
+SKILLS
+Product Roadmap, Agile, Scrum, Jira, User Research, A/B Testing, SQL, Figma, KPIs, PRDs"
+Patricia Martinez,patricia.martinez77@example.com,+1-213-555-4456,Marketing & Sales,4,BS in Marketing,New York University,"SEO, SEM, Google Analytics, Content Strategy, HubSpot, Salesforce, B2B Sales, Copywriting, Email Campaigns","NAME: Patricia Martinez
+CONTACT: patricia.martinez77@example.com | +1-213-555-4456
+OBJECTIVE
+Results-driven Marketer with 4 years of experience designing and executing comprehensive digital campaigns that drive conversion.
+
+EXPERIENCE
+Digital Marketing Specialist at Company A (2022 - 2026)
+- Managed a monthly ad budget of $45k, optimizing campaigns to reduce CPA by 29%.
+- Designed and executed SEO and content strategy using HubSpot, increasing organic traffic by 73%.
+
+Marketing Associate at Company B (2022 - 2022)
+- Led CRM integration and email campaigns on Salesforce, increasing sales lead pipeline by 45%.
+
+EDUCATION
+BS in Marketing - New York University
+
+SKILLS
+SEO, SEM, Google Analytics, Content Strategy, HubSpot, Salesforce, B2B Sales, Copywriting, Email Campaigns"
+Michael Brown,michael.brown34@example.com,+1-312-555-8823,Finance & Accounting,8,MS in Finance,Carnegie Mellon University,"Financial Analysis, Excel (Advanced), VBA, GAAP, Auditing, Budgeting, Financial Modeling, SQL, SAP","NAME: Michael Brown
+CONTACT: michael.brown34@example.com | +1-312-555-8823
+OBJECTIVE
+Detail-oriented Senior Financial Analyst with 8 years of experience in corporate finance, financial modeling, and risk mitigation.
+
+EXPERIENCE
+Senior Financial Analyst at Company A (2020 - 2026)
+- Built financial models using Excel (Advanced) to forecast company cash flows, reducing forecast error to under 4%.
+- Managed annual budget of $2.3M, identifying cost-saving opportunities of 17% across departments.
+
+Financial Analyst at Company B (2018 - 2020)
+- Led GAAP auditing for 15 corporate clients, ensuring 100% compliance and zero material findings.
+- Automated reporting workflows using VBA and Excel, saving 22 hours of manual work per month.
+
+EDUCATION
+MS in Finance - Carnegie Mellon University
+
+SKILLS
+Financial Analysis, Excel (Advanced), VBA, GAAP, Auditing, Budgeting, Financial Modeling, SQL, SAP"
+Jennifer Lee,jennifer.lee63@example.com,+1-510-555-2211,Software Engineering,3,BS in Computer Science,UC Berkeley,"Java, Python, Node.js, TypeScript, React, Git, SQL, REST APIs, HTML/CSS","NAME: Jennifer Lee
+CONTACT: jennifer.lee63@example.com | +1-510-555-2211
+OBJECTIVE
+Full-Stack Developer with 3+ years of background in design, development, and deployment of complex software architectures. Passionate about clean code and automation.
+
+EXPERIENCE
+Software Engineer at Company A (2023 - 2026)
+- Architected and deployed microservices using Java and Node.js, reducing server latency by 38%.
+- Refactored codebases using TypeScript, improving test coverage from 60% to 92%.
+
+Junior Developer at Company B (2023 - 2023)
+- Designed and implemented high-throughput REST APIs with Python, handling over 50k daily active users.
+
+EDUCATION
+BS in Computer Science - UC Berkeley
+
+SKILLS
+Java, Python, Node.js, TypeScript, React, Git, SQL, REST APIs, HTML/CSS"
+David Wilson,david.wilson18@example.com,+1-408-555-6634,Data Science & AI,9,PhD in Machine Learning,MIT,"Python, R, Deep Learning, NLP, BERT, LLMs, Apache Spark, TensorFlow, Computer Vision, Feature Engineering","NAME: David Wilson
+CONTACT: david.wilson18@example.com | +1-408-555-6634
+OBJECTIVE
+Machine Learning Engineer specializing in building, training, and deploying predictive models. Proficient in deep learning and NLP architectures.
+
+EXPERIENCE
+Senior Machine Learning Engineer at Company A (2020 - 2026)
+- Developed predictive models using TensorFlow and Deep Learning that improved forecasting accuracy by 78%.
+- Built end-to-end NLP pipelines using LLMs and BERT, reducing text processing time by 63%.
+
+ML Researcher at Company B (2017 - 2020)
+- Created data pipelines using Apache Spark and Python, processing 500 GB of unstructured data daily.
+- Implemented an automated anomaly detection system using Computer Vision, saving 40 hours of manual audit work weekly.
+
+EDUCATION
+PhD in Machine Learning - MIT
+
+SKILLS
+Python, R, Deep Learning, NLP, BERT, LLMs, Apache Spark, TensorFlow, Computer Vision, Feature Engineering"
+Linda Anderson,linda.anderson29@example.com,+1-512-555-7734,Product Management,2,BS in Information Technology,Georgia Tech,"Agile, Scrum, Jira, User Research, Product Analytics, Market Analysis, Figma, Confluence, Customer Discovery","NAME: Linda Anderson
+CONTACT: linda.anderson29@example.com | +1-512-555-7734
+OBJECTIVE
+Dynamic PM skilled in product roadmap execution, stakeholder alignment, and data-driven product strategy. Experienced in Agile.
+
+EXPERIENCE
+Associate Product Manager at Company A (2024 - 2026)
+- Defined the product strategy and roadmap for a new SaaS product, achieving $180k ARR within the first year.
+- Conducted 55+ customer interviews and user research sessions, translating feedback into successful PRDs.
+
+EDUCATION
+BS in Information Technology - Georgia Tech
+
+SKILLS
+Agile, Scrum, Jira, User Research, Product Analytics, Market Analysis, Figma, Confluence, Customer Discovery"
+William Thomas,william.thomas87@example.com,+1-646-555-3312,Software Engineering,12,MS in Software Engineering,Cornell University,"Python, Go, C++, Docker, Kubernetes, AWS, Redis, GraphQL, System Design, Microservices, SQL, CI/CD","NAME: William Thomas
+CONTACT: william.thomas87@example.com | +1-646-555-3312
+OBJECTIVE
+Results-driven Senior Software Engineer with a strong foundation in software design patterns, microservices architecture, and cloud operations. Experienced in leading agile developer teams.
+
+EXPERIENCE
+Senior Software Engineer at Company A (2020 - 2026)
+- Architected and deployed microservices using Go and Kubernetes, reducing server latency by 58%.
+- Led migration of legacy systems to AWS on Docker, improving deployment efficiency by 72%.
+
+Software Architect at Company B (2017 - 2020)
+- Designed and implemented high-throughput REST APIs with Python, handling over 200k daily active users.
+- Collaborated with cross-functional teams to integrate Redis with GraphQL, saving database overhead by 45%.
+
+EDUCATION
+MS in Software Engineering - Cornell University
+
+SKILLS
+Python, Go, C++, Docker, Kubernetes, AWS, Redis, GraphQL, System Design, Microservices, SQL, CI/CD"
+Elizabeth Taylor,elizabeth.taylor56@example.com,+1-305-555-9812,Marketing & Sales,6,BBA in Business,University of Michigan,"SEO, SEM, Salesforce, HubSpot CRM, Content Strategy, Social Media Marketing, Brand Management, Lead Generation, Market Research","NAME: Elizabeth Taylor
+CONTACT: elizabeth.taylor56@example.com | +1-305-555-9812
+OBJECTIVE
+Growth Marketing specialist with expertise in SEO, lead generation, and customer acquisition. Skilled in using CRM systems.
+
+EXPERIENCE
+Marketing Manager at Company A (2021 - 2026)
+- Managed a monthly ad budget of $75k, optimizing campaigns to reduce CPA by 41%.
+- Led CRM integration and email campaigns on Salesforce, increasing sales lead pipeline by 67%.
+
+Digital Marketing Specialist at Company B (2020 - 2021)
+- Spearheaded social media marketing campaigns, growing brand followers by 85% and engagement rates by 52%.
+
+EDUCATION
+BBA in Business - University of Michigan
+
+SKILLS
+SEO, SEM, Salesforce, HubSpot CRM, Content Strategy, Social Media Marketing, Brand Management, Lead Generation, Market Research"
+Christopher Davis,christopher.davis44@example.com,+1-617-555-2287,Finance & Accounting,3,BBA in Finance,Boston University,"Financial Analysis, Excel (Advanced), QuickBooks, GAAP, Budgeting, Risk Assessment, Forecasting, Balance Sheets","NAME: Christopher Davis
+CONTACT: christopher.davis44@example.com | +1-617-555-2287
+OBJECTIVE
+Certified Accountant with extensive background in GAAP compliance, auditing, and corporate budgeting. Proficient in Excel (Advanced).
+
+EXPERIENCE
+Financial Analyst at Company A (2023 - 2026)
+- Built financial models using Excel (Advanced) to forecast company cash flows, reducing forecast error to under 7%.
+- Led GAAP auditing for 6 corporate clients, ensuring 100% compliance and zero material findings.
+
+Junior Accountant at Company B (2023 - 2023)
+- Managed annual budget of $500k, identifying cost-saving opportunities of 12% across departments.
+
+EDUCATION
+BBA in Finance - Boston University
+
+SKILLS
+Financial Analysis, Excel (Advanced), QuickBooks, GAAP, Budgeting, Risk Assessment, Forecasting, Balance Sheets"
+Sarah Jackson,sarah.jackson72@example.com,+1-206-555-4456,Data Science & AI,4,MS in Computer Science,University of Washington,"Python, SQL, Scikit-Learn, Pandas, NumPy, Machine Learning, Data Mining, Statistics, Tableau, Matplotlib","NAME: Sarah Jackson
+CONTACT: sarah.jackson72@example.com | +1-206-555-4456
+OBJECTIVE
+Analytical and detail-oriented Data Professional with 4+ years of expertise in predictive analytics, statistics, and machine learning pipelines.
+
+EXPERIENCE
+Data Analyst at Company A (2022 - 2026)
+- Developed predictive models using Scikit-Learn and Pandas that improved forecasting accuracy by 55%.
+- Designed and optimized recommendation algorithms using Tableau, resulting in a 28% increase in user engagement.
+
+Junior Data Scientist at Company B (2022 - 2022)
+- Created data pipelines using Python and SQL, processing 80 GB of unstructured data daily.
+
+EDUCATION
+MS in Computer Science - University of Washington
+
+SKILLS
+Python, SQL, Scikit-Learn, Pandas, NumPy, Machine Learning, Data Mining, Statistics, Tableau, Matplotlib"
+Daniel White,daniel.white91@example.com,+1-713-555-8876,Software Engineering,1,BS in Computer Science,UT Austin,"Python, HTML/CSS, JavaScript, React, SQL, Git, REST APIs, Node.js","NAME: Daniel White
+CONTACT: daniel.white91@example.com | +1-713-555-8876
+OBJECTIVE
+Innovative Software Engineer with 1 year of experience specializing in building scalable web applications and distributed systems.
+
+EXPERIENCE
+Junior Software Engineer at Company A (2025 - 2026)
+- Designed and implemented high-throughput REST APIs with Python, handling over 15k daily active users.
+- Refactored codebases using React, improving test coverage from 60% to 80%.
+
+EDUCATION
+BS in Computer Science - UT Austin
+
+SKILLS
+Python, HTML/CSS, JavaScript, React, SQL, Git, REST APIs, Node.js"
+Karen Harris,karen.harris38@example.com,+1-404-555-6621,Product Management,10,MBA,University of Michigan,"Product Roadmap, Agile, Scrum, Jira, A/B Testing, SQL, SaaS, Go-to-Market, Stakeholder Management, KPIs, Data-driven Decisions","NAME: Karen Harris
+CONTACT: karen.harris38@example.com | +1-404-555-6621
+OBJECTIVE
+Technical Product Manager with a track record of driving cross-functional teams to deliver high-impact features using Agile and analytics.
+
+EXPERIENCE
+Senior Product Manager at Company A (2020 - 2026)
+- Defined the product strategy and roadmap for a new SaaS product, achieving $2.1M ARR within the first year.
+- Managed cross-functional teams of 20 engineers and designers using Agile and Scrum methodologies.
+
+Product Manager at Company B (2016 - 2020)
+- Conducted 300+ customer interviews and user research sessions, translating feedback into successful PRDs.
+- Optimized onboarding funnel using SQL and A/B Testing, boosting user conversion by 55%.
+
+EDUCATION
+MBA - University of Michigan
+
+SKILLS
+Product Roadmap, Agile, Scrum, Jira, A/B Testing, SQL, SaaS, Go-to-Market, Stakeholder Management, KPIs, Data-driven Decisions"
+Thomas Martin,thomas.martin63@example.com,+1-312-555-4498,Finance & Accounting,15,PhD in Economics,University of Chicago,"Financial Analysis, Excel (Advanced), VBA, SAP, GAAP, Auditing, Portfolio Management, Budgeting, Valuation, Corporate Finance, Risk Assessment","NAME: Thomas Martin
+CONTACT: thomas.martin63@example.com | +1-312-555-4498
+OBJECTIVE
+Finance specialist skilled in portfolio management, corporate valuation, and strategic forecasting using Excel, SQL, and Python.
+
+EXPERIENCE
+Senior Finance Manager at Company A (2020 - 2026)
+- Built financial models using Excel (Advanced) to forecast company cash flows, reducing forecast error to under 2%.
+- Managed annual budget of $15M, identifying cost-saving opportunities of 23% across departments.
+
+Finance Director at Company B (2014 - 2020)
+- Led GAAP auditing for 42 corporate clients, ensuring 100% compliance and zero material findings.
+- Conducted asset valuation and risk assessment, advising senior leadership on a $120M acquisition deal.
+
+EDUCATION
+PhD in Economics - University of Chicago
+
+SKILLS
+Financial Analysis, Excel (Advanced), VBA, SAP, GAAP, Auditing, Portfolio Management, Budgeting, Valuation, Corporate Finance, Risk Assessment"
+Jessica Moore,jessica.moore47@example.com,+1-858-555-2213,Data Science & AI,2,BS in Data Science,UC San Diego,"Python, Pandas, NumPy, Scikit-Learn, SQL, Matplotlib, Statistics, Machine Learning","NAME: Jessica Moore
+CONTACT: jessica.moore47@example.com | +1-858-555-2213
+OBJECTIVE
+Analytical and detail-oriented Data Professional with 2+ years of expertise in predictive analytics and machine learning pipelines.
+
+EXPERIENCE
+Junior Data Scientist at Company A (2024 - 2026)
+- Developed predictive models using Scikit-Learn and Pandas that improved forecasting accuracy by 35%.
+- Created data pipelines using Python and SQL, processing 15 GB of unstructured data daily.
+
+EDUCATION
+BS in Data Science - UC San Diego
+
+SKILLS
+Python, Pandas, NumPy, Scikit-Learn, SQL, Matplotlib, Statistics, Machine Learning"
+Charles Robinson,charles.robinson84@example.com,+1-617-555-7743,Software Engineering,5,BS in Software Engineering,Georgia Tech,"Python, Java, AWS, Docker, CI/CD, SQL, Git, Microservices, REST APIs, Redis","NAME: Charles Robinson
+CONTACT: charles.robinson84@example.com | +1-617-555-7743
+OBJECTIVE
+Full-Stack Developer with 5+ years of background in design, development, and deployment of complex software architectures.
+
+EXPERIENCE
+Software Engineer at Company A (2022 - 2026)
+- Architected and deployed microservices using Python and AWS, reducing server latency by 47%.
+- Designed and implemented high-throughput REST APIs with Java, handling over 90k daily active users.
+
+Junior Developer at Company B (2021 - 2022)
+- Led migration of legacy systems to Docker on CI/CD, improving deployment efficiency by 53%.
+
+EDUCATION
+BS in Software Engineering - Georgia Tech
+
+SKILLS
+Python, Java, AWS, Docker, CI/CD, SQL, Git, Microservices, REST APIs, Redis"
+Nancy Walker,nancy.walker22@example.com,+1-503-555-5534,Marketing & Sales,8,BBA in Marketing,NYU,"SEO, SEM, Google Analytics, HubSpot, Content Strategy, Copywriting, Email Campaigns, B2B Sales, CRM, Public Relations","NAME: Nancy Walker
+CONTACT: nancy.walker22@example.com | +1-503-555-5534
+OBJECTIVE
+Sales professional with a proven track record of exceeding quotas, managing high-value client relations, and leveraging data for market growth.
+
+EXPERIENCE
+Senior Marketing Manager at Company A (2020 - 2026)
+- Managed a monthly ad budget of $120k, optimizing campaigns to reduce CPA by 36%.
+- Negotiated and closed enterprise deals, generating $890k in new revenue in Q3.
+
+Marketing Manager at Company B (2018 - 2020)
+- Designed and executed SEO and content strategy using HubSpot, increasing organic traffic by 95%.
+- Led CRM integration and email campaigns on HubSpot, increasing sales lead pipeline by 58%.
+
+EDUCATION
+BBA in Marketing - NYU
+
+SKILLS
+SEO, SEM, Google Analytics, HubSpot, Content Strategy, Copywriting, Email Campaigns, B2B Sales, CRM, Public Relations"
+Mark Thompson,mark.thompson67@example.com,+1-949-555-3387,Software Engineering,11,MS in Computer Science,Caltech,"Python, C++, Go, Kubernetes, AWS, Docker, System Design, GraphQL, Redis, SQL, Microservices, CI/CD","NAME: Mark Thompson
+CONTACT: mark.thompson67@example.com | +1-949-555-3387
+OBJECTIVE
+Results-driven Senior Software Engineer with a strong foundation in software design patterns, microservices architecture, and cloud operations.
+
+EXPERIENCE
+Senior Software Engineer at Company A (2020 - 2026)
+- Architected and deployed microservices using Go and Kubernetes, reducing server latency by 65%.
+- Designed and implemented high-throughput REST APIs with Python, handling over 300k daily active users.
+
+Staff Engineer at Company B (2015 - 2020)
+- Led migration of legacy systems to AWS on Docker, improving deployment efficiency by 80%.
+- Collaborated with cross-functional teams to integrate Redis with GraphQL, saving database overhead by 50%.
+
+EDUCATION
+MS in Computer Science - Caltech
+
+SKILLS
+Python, C++, Go, Kubernetes, AWS, Docker, System Design, GraphQL, Redis, SQL, Microservices, CI/CD"
+Betty Clark,betty.clark59@example.com,+1-773-555-9981,Finance & Accounting,6,MS in Finance,Northwestern University,"Financial Analysis, Excel (Advanced), VBA, GAAP, Auditing, Budgeting, Financial Modeling, Risk Assessment, QuickBooks","NAME: Betty Clark
+CONTACT: betty.clark59@example.com | +1-773-555-9981
+OBJECTIVE
+Detail-oriented Financial Analyst with 6 years of experience in corporate finance, financial modeling, and risk mitigation.
+
+EXPERIENCE
+Financial Analyst at Company A (2021 - 2026)
+- Built financial models using Financial Modeling to forecast company cash flows, reducing forecast error to under 5%.
+- Managed annual budget of $3.5M, identifying cost-saving opportunities of 19% across departments.
+
+Junior Accountant at Company B (2020 - 2021)
+- Led GAAP auditing for 10 corporate clients, ensuring 100% compliance and zero material findings.
+- Automated reporting workflows using VBA and Excel, saving 18 hours of manual work per month.
+
+EDUCATION
+MS in Finance - Northwestern University
+
+SKILLS
+Financial Analysis, Excel (Advanced), VBA, GAAP, Auditing, Budgeting, Financial Modeling, Risk Assessment, QuickBooks"
+Anthony Lewis,anthony.lewis73@example.com,+1-415-555-7723,Data Science & AI,7,MS in Data Science & Analytics,UC Berkeley,"Python, R, TensorFlow, PyTorch, NLP, Machine Learning, Deep Learning, Hadoop, Data Pipelines, SQL, Apache Spark","NAME: Anthony Lewis
+CONTACT: anthony.lewis73@example.com | +1-415-555-7723
+OBJECTIVE
+Data Scientist with 7 years of experience turning complex datasets into actionable business insights. Highly skilled in PyTorch and NLP.
+
+EXPERIENCE
+Senior Data Scientist at Company A (2021 - 2026)
+- Developed predictive models using TensorFlow and Deep Learning that improved forecasting accuracy by 72%.
+- Built end-to-end NLP pipelines using BERT and Transformers, reducing text processing time by 58%.
+
+Data Scientist at Company B (2019 - 2021)
+- Created data pipelines using Apache Spark and Hadoop, processing 300 GB of unstructured data daily.
+- Implemented an automated anomaly detection system using Machine Learning, saving 35 hours of manual audit work weekly.
+
+EDUCATION
+MS in Data Science & Analytics - UC Berkeley
+
+SKILLS
+Python, R, TensorFlow, PyTorch, NLP, Machine Learning, Deep Learning, Hadoop, Data Pipelines, SQL, Apache Spark"
+Margaret Hall,margaret.hall31@example.com,+1-347-555-4423,Product Management,5,MS in Computer Science,Columbia University,"Product Roadmap, Agile, Scrum, Jira, A/B Testing, User Research, SQL, SaaS, Figma, PRDs, Confluence, Metrics","NAME: Margaret Hall
+CONTACT: margaret.hall31@example.com | +1-347-555-4423
+OBJECTIVE
+Product Manager with 5 years of experience managing SaaS products from concept to launch. Strong focus on user-centric design and agile execution.
+
+EXPERIENCE
+Product Manager at Company A (2022 - 2026)
+- Defined the product strategy and roadmap for a new SaaS product, achieving $620k ARR within the first year.
+- Conducted 150+ customer interviews and user research sessions, translating feedback into successful PRDs.
+
+Associate PM at Company B (2021 - 2022)
+- Managed cross-functional teams of 8 engineers and designers using Agile and Scrum methodologies.
+- Optimized onboarding funnel using Figma and A/B Testing, boosting user conversion by 42%.
+
+EDUCATION
+MS in Computer Science - Columbia University
+
+SKILLS
+Product Roadmap, Agile, Scrum, Jira, A/B Testing, User Research, SQL, SaaS, Figma, PRDs, Confluence, Metrics"
+Sandra Allen,sandra.allen88@example.com,+1-214-555-6612,Marketing & Sales,3,BS in Marketing,UT Austin,"SEO, Google Analytics, Content Strategy, Social Media Marketing, HubSpot, Copywriting, Email Campaigns, B2B Sales","NAME: Sandra Allen
+CONTACT: sandra.allen88@example.com | +1-214-555-6612
+OBJECTIVE
+Results-driven Marketer with 3 years of experience designing and executing comprehensive digital campaigns that drive conversion.
+
+EXPERIENCE
+Marketing Specialist at Company A (2023 - 2026)
+- Managed a monthly ad budget of $25k, optimizing campaigns to reduce CPA by 22%.
+- Designed and executed SEO and content strategy using Google Analytics, increasing organic traffic by 58%.
+
+Marketing Associate at Company B (2023 - 2023)
+- Spearheaded social media marketing campaigns, growing brand followers by 62% and engagement rates by 38%.
+
+EDUCATION
+BS in Marketing - UT Austin
+
+SKILLS
+SEO, Google Analytics, Content Strategy, Social Media Marketing, HubSpot, Copywriting, Email Campaigns, B2B Sales"
+Ashley Young,ashley.young52@example.com,+1-602-555-3387,Software Engineering,4,BS in Computer Science,Arizona State University,"Python, JavaScript, React, Node.js, SQL, Git, REST APIs, HTML/CSS, Docker","NAME: Ashley Young
+CONTACT: ashley.young52@example.com | +1-602-555-3387
+OBJECTIVE
+Innovative Software Engineer with 4 years of experience specializing in building scalable web applications.
+
+EXPERIENCE
+Software Engineer at Company A (2022 - 2026)
+- Architected and deployed microservices using Python and Docker, reducing server latency by 33%.
+- Designed and implemented high-throughput REST APIs with React, handling over 60k daily active users.
+
+Junior Developer at Company B (2022 - 2022)
+- Refactored codebases using JavaScript, improving test coverage from 60% to 85%.
+
+EDUCATION
+BS in Computer Science - Arizona State University
+
+SKILLS
+Python, JavaScript, React, Node.js, SQL, Git, REST APIs, HTML/CSS, Docker"
+Kimberly Hernandez,kimberly.hernandez19@example.com,+1-787-555-8834,Finance & Accounting,2,BBA in Finance,Florida International University,"Financial Analysis, Excel (Advanced), QuickBooks, GAAP, Budgeting, Forecasting, Balance Sheets, Reconciliation","NAME: Kimberly Hernandez
+CONTACT: kimberly.hernandez19@example.com | +1-787-555-8834
+OBJECTIVE
+Certified Accountant with background in GAAP compliance, auditing, and corporate budgeting. Proficient in QuickBooks.
+
+EXPERIENCE
+Junior Financial Analyst at Company A (2024 - 2026)
+- Built financial models using Excel (Advanced) to forecast company cash flows, reducing forecast error to under 9%.
+- Managed annual budget of $300k, identifying cost-saving opportunities of 8% across departments.
+
+EDUCATION
+BBA in Finance - Florida International University
+
+SKILLS
+Financial Analysis, Excel (Advanced), QuickBooks, GAAP, Budgeting, Forecasting, Balance Sheets, Reconciliation"
