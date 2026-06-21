@@ -122,13 +122,22 @@ function showPage(page) {
 }
 
 // ─── Dataset Info ─────────────────────────────
-async function fetchDatasetInfo() {
-  try {
-    const res = await fetch(API_BASE_URL + '/api/dataset-info');
-    _datasetInfo = await res.json();
-    updateStatusBar();
-    updateHeroStats();
-  } catch(e) { console.warn('Could not fetch dataset info:', e); }
+async function fetchDatasetInfo(retries = 5) {
+  for (let i = 0; i < retries; i++) {
+    try {
+      const res = await fetch(API_BASE_URL + '/api/dataset-info', { signal: AbortSignal.timeout(15000) });
+      if (res.ok) {
+        _datasetInfo = await res.json();
+        updateStatusBar();
+        updateHeroStats();
+        return;
+      }
+    } catch(e) {
+      console.warn(`Dataset info attempt ${i+1} failed:`, e.message);
+      if (i < retries - 1) await new Promise(r => setTimeout(r, 4000)); // wait 4s before retry
+    }
+  }
+  console.warn('Could not fetch dataset info after retries.');
 }
 
 function updateStatusBar() {
@@ -178,8 +187,26 @@ function animateCount(containerId, selector, target, suffix) {
   input.addEventListener('change', () => { if (input.files[0]) handleCsvUpload(input.files[0]); });
 })();
 
+async function wakeUpBackend(msgEl) {
+  // Ping the backend and wait for it to wake up (Render free tier cold start)
+  const MAX_WAIT = 90000; // 90 seconds max
+  const start = Date.now();
+  if (msgEl) msgEl.textContent = '⏳ Waking up backend (may take ~30s on first use)...';
+  while (Date.now() - start < MAX_WAIT) {
+    try {
+      const r = await fetch(API_BASE_URL + '/ping', { signal: AbortSignal.timeout(8000) });
+      if (r.ok) {
+        if (msgEl) msgEl.textContent = '✅ Backend ready! Uploading...';
+        return true;
+      }
+    } catch (_) {}
+    await new Promise(r => setTimeout(r, 3000));
+  }
+  return false;
+}
+
 async function handleCsvUpload(file) {
-  if (!file.name.endsWith('.csv')) { showToast('Please upload a .csv file.', 'error'); return; }
+  if (!file.name.toLowerCase().endsWith('.csv')) { showToast('Please upload a .csv file.', 'error'); return; }
 
   const prog   = document.getElementById('upload-progress');
   const fill   = document.getElementById('progress-fill');
@@ -187,12 +214,22 @@ async function handleCsvUpload(file) {
   const result = document.getElementById('upload-result');
   result.classList.add('hidden');
   prog.classList.remove('hidden');
+  fill.style.width = '5%';
 
-  let pct = 0;
+  // Step 1: Wake up the backend first
+  const alive = await wakeUpBackend(msg);
+  if (!alive) {
+    prog.classList.add('hidden');
+    showToast('Backend is taking too long to wake up. Please try again in 30 seconds.', 'error');
+    return;
+  }
+
+  // Step 2: Animate progress while uploading
+  let pct = 10;
   const interval = setInterval(() => {
-    pct = Math.min(pct + Math.random() * 15, 85);
+    pct = Math.min(pct + Math.random() * 12, 85);
     fill.style.width = pct + '%';
-  }, 150);
+  }, 200);
 
   const formData = new FormData();
   formData.append('file', file);
@@ -219,6 +256,7 @@ async function handleCsvUpload(file) {
     showToast('Upload error: ' + e.message, 'error');
   }
 }
+
 
 // ─── Analytics ────────────────────────────────
 async function loadAnalytics() {
