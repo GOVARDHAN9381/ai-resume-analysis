@@ -19,7 +19,7 @@ from firebase_admin import credentials, firestore
 import numpy as np
 import pandas as pd
 
-from fastapi import FastAPI, File, UploadFile, Form, HTTPException, Request
+from fastapi import FastAPI, File, UploadFile, Form, HTTPException, Request, BackgroundTasks
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import HTMLResponse, FileResponse, Response
 from fastapi.middleware.cors import CORSMiddleware
@@ -262,7 +262,7 @@ async def serve_index():
 
 
 @app.post("/api/upload-dataset")
-async def upload_dataset(file: UploadFile = File(...)):
+async def upload_dataset(background_tasks: BackgroundTasks, file: UploadFile = File(...)):
     """Accept a CSV file, validate it, store it globally."""
     global _dataset
 
@@ -294,7 +294,7 @@ async def upload_dataset(file: UploadFile = File(...)):
 
     try:
         _dataset = _normalize_df(df)
-        _save_dataset_to_firestore(_dataset)
+        background_tasks.add_task(_save_dataset_to_firestore, _dataset)
     except ValueError as e:
         raise HTTPException(status_code=422, detail=str(e))
 
