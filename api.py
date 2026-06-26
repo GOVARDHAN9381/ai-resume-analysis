@@ -153,29 +153,62 @@ def _normalize_df(df: pd.DataFrame) -> List[dict]:
 
 
 def _load_supabase_as_dataset() -> List[dict]:
-    """Load from Supabase 'candidates' table."""
+    """Load ALL rows from Supabase 'candidates' table using pagination.
+    
+    Supabase defaults to a 1,000-row limit per request. This function
+    paginates through all records in chunks of 1,000 until exhausted.
+    """
     if not supabase:
         return []
     try:
-        response = supabase.table("candidates").select("*").execute()
-        return response.data
+        all_records = []
+        chunk_size = 1000
+        offset = 0
+        while True:
+            response = (
+                supabase.table("candidates")
+                .select("*")
+                .range(offset, offset + chunk_size - 1)
+                .execute()
+            )
+            batch = response.data
+            if not batch:
+                break
+            all_records.extend(batch)
+            print(f"INFO: Loaded {len(all_records):,} candidates from Supabase so far...")
+            if len(batch) < chunk_size:
+                # Last page — no more records
+                break
+            offset += chunk_size
+        print(f"SUCCESS: Loaded total {len(all_records):,} candidates from Supabase.")
+        return all_records
     except Exception as e:
         print(f"WARNING: Supabase load failed: {e}")
         return []
 
 
 def _save_dataset_to_supabase(dataset: List[dict]):
-    """Save dataset to Supabase using batches."""
+    """Clear old candidates and save the new dataset to Supabase using batches.
+    
+    Deletes all existing rows first so each upload fully replaces the dataset
+    rather than appending duplicates on top.
+    """
     if not supabase or not dataset:
         return
     try:
+        # Clear existing candidates so we don't accumulate duplicates across uploads
+        print("INFO: Clearing existing candidates from Supabase...")
+        supabase.table("candidates").delete().neq("id", -1).execute()
+        print("INFO: Old candidates cleared. Inserting new dataset...")
+
         count = 0
         chunk_size = 400
         for i in range(0, len(dataset), chunk_size):
-            chunk = dataset[i:i+chunk_size]
+            chunk = dataset[i:i + chunk_size]
             supabase.table("candidates").insert(chunk).execute()
             count += len(chunk)
-        print(f"SUCCESS: Successfully saved {count} candidates to Supabase.")
+            print(f"INFO: Inserted {count:,}/{len(dataset):,} candidates...")
+        print(f"SUCCESS: Successfully saved {count:,} candidates to Supabase.")
     except Exception as e:
         print(f"ERROR: Failed to save to Supabase: {e}")
 
