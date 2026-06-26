@@ -13,9 +13,7 @@ import tempfile
 import re
 from collections import Counter
 
-import firebase_admin
-from firebase_admin import credentials, firestore
-
+from supabase import create_client, Client
 import numpy as np
 import pandas as pd
 
@@ -33,31 +31,20 @@ from src.screen_matcher import ResumeMatcher
 # App Setup
 # ─────────────────────────────────────────────
 
-# Firebase Initialization
-FIREBASE_CRED_PATH = "serviceAccountKey.json"
-db = None
+# Supabase Initialization
+SUPABASE_URL = os.environ.get("SUPABASE_URL", "https://ulmdpmajlzaeszjafsfx.supabase.co")
+SUPABASE_KEY = os.environ.get("SUPABASE_KEY", "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVsbWRwbWFqbHphZXN6amFmc2Z4Iiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc4MjI3NzYzNCwiZXhwIjoyMDk3ODUzNjM0fQ.MIU_E9DlonAFcJmu2CThc00eL5eZb06HOSS-nKbtK-I")
+supabase: Client = None
 
 try:
-    if not firebase_admin._apps:
-        if os.path.exists(FIREBASE_CRED_PATH):
-            cred = credentials.Certificate(FIREBASE_CRED_PATH)
-            firebase_admin.initialize_app(cred)
-            print(f"✅ Successfully initialized Firebase using {FIREBASE_CRED_PATH}.")
-        elif "FIREBASE_CREDENTIALS_JSON" in os.environ:
-            import json
-            cred_dict = json.loads(os.environ["FIREBASE_CREDENTIALS_JSON"])
-            cred = credentials.Certificate(cred_dict)
-            firebase_admin.initialize_app(cred)
-            print("✅ Successfully initialized Firebase using env var credentials.")
-        else:
-            # Fallback to Application Default Credentials (ADC)
-            firebase_admin.initialize_app(options={'projectId': 'ai-resume-872f9'})
-            print("✅ Successfully initialized Firebase using Application Default Credentials (ADC).")
-    
-    db = firestore.client()
+    if SUPABASE_URL and SUPABASE_KEY:
+        supabase = create_client(SUPABASE_URL, SUPABASE_KEY)
+        print("SUCCESS: Successfully initialized Supabase.")
+    else:
+        print("WARNING: Supabase credentials not found.")
 except Exception as e:
-    print(f"❌ Failed to initialize Firebase: {e}\n⚠️ Please run 'gcloud auth application-default login' in your terminal.")
-    db = None
+    print(f"ERROR: Failed to initialize Supabase: {e}")
+    supabase = None
 
 app = FastAPI(title="ResumeAI API", version="2.0.0")
 
@@ -68,7 +55,7 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# No-cache middleware — ensures browser always loads latest JS/CSS
+# No-cache middleware - ensures browser always loads latest JS/CSS
 @app.middleware("http")
 async def add_no_cache_headers(request: Request, call_next):
     response = await call_next(request)
@@ -165,50 +152,54 @@ def _normalize_df(df: pd.DataFrame) -> List[dict]:
     return df.to_dict(orient="records")
 
 
-def _load_firestore_as_dataset() -> List[dict]:
-    """Load from Firestore 'candidates' collection."""
-    if not db:
+def _load_supabase_as_dataset() -> List[dict]:
+    """Load from Supabase 'candidates' table."""
+    if not supabase:
         return []
     try:
-        docs = db.collection("candidates").stream()
-        return [doc.to_dict() for doc in docs]
+        response = supabase.table("candidates").select("*").execute()
+        return response.data
     except Exception as e:
-        print(f"⚠️ Firestore load failed: {e}")
+        print(f"WARNING: Supabase load failed: {e}")
         return []
 
 
-def _save_dataset_to_firestore(dataset: List[dict]):
-    """Save dataset to Firestore using batches."""
-    if not db or not dataset:
+def _save_dataset_to_supabase(dataset: List[dict]):
+    """Save dataset to Supabase using batches."""
+    if not supabase or not dataset:
         return
     try:
-        coll_ref = db.collection("candidates")
-        batch = db.batch()
         count = 0
-        for i, item in enumerate(dataset):
-            doc_id = str(item.get("id", i))
-            doc_ref = coll_ref.document(doc_id)
-            batch.set(doc_ref, item)
-            count += 1
-            if count % 400 == 0:
-                batch.commit()
-                batch = db.batch()
-        if count % 400 != 0:
-            batch.commit()
-        print(f"✅ Successfully saved {len(dataset)} candidates to Firestore.")
+        chunk_size = 400
+        for i in range(0, len(dataset), chunk_size):
+            chunk = dataset[i:i+chunk_size]
+            supabase.table("candidates").insert(chunk).execute()
+            count += len(chunk)
+        print(f"SUCCESS: Successfully saved {count} candidates to Supabase.")
     except Exception as e:
-        print(f"❌ Failed to save to Firestore: {e}")
+        print(f"ERROR: Failed to save to Supabase: {e}")
 
+def _process_and_save_dataset(df: pd.DataFrame):
+    """Background task wrapper to normalize and save dataset."""
+    global _dataset
+    try:
+        print(f"INFO: Normalizing dataset of {len(df)} rows in background...")
+        normalized = _normalize_df(df)
+        _dataset = normalized
+        print(f"SUCCESS: Normalization complete. Saving to Supabase...")
+        _save_dataset_to_supabase(normalized)
+    except Exception as e:
+        print(f"ERROR: Failed to process dataset in background: {e}")
 
 def _auto_load_dataset():
     """Try to load dataset from Firestore, then SQLite, then sample CSV, on startup."""
     global _dataset
 
-    # 1. Try Firestore first
-    firestore_data = _load_firestore_as_dataset()
-    if firestore_data:
-        _dataset = firestore_data
-        print(f"✅ Auto-loaded {len(_dataset):,} candidates from Firestore.")
+    # 1. Try Supabase first
+    supabase_data = _load_supabase_as_dataset()
+    if supabase_data:
+        _dataset = supabase_data
+        print(f"SUCCESS: Auto-loaded {len(_dataset):,} candidates from Supabase.")
         return
 
     # 2. Try SQLite first
@@ -224,10 +215,10 @@ def _auto_load_dataset():
             conn.close()
             if not df.empty:
                 _dataset = df.to_dict(orient="records")
-                print(f"✅ Auto-loaded {len(_dataset):,} candidates from SQLite.")
+                print(f"SUCCESS: Auto-loaded {len(_dataset):,} candidates from SQLite.")
                 return
     except Exception as e:
-        print(f"⚠️ SQLite load failed: {e}")
+        print(f"WARNING: SQLite load failed: {e}")
 
     # 2. Fall back to CSV files
     for csv_path in ["sample_dataset.csv", "data/candidates_dataset.csv"]:
@@ -240,12 +231,12 @@ def _auto_load_dataset():
                         df[col] = default
                 df["experience_years"] = pd.to_numeric(df["experience_years"], errors="coerce").fillna(0).astype(int)
                 _dataset = df.to_dict(orient="records")
-                print(f"✅ Auto-loaded {len(_dataset):,} candidates from {csv_path}.")
+                print(f"SUCCESS: Auto-loaded {len(_dataset):,} candidates from {csv_path}.")
                 return
             except Exception as e:
-                print(f"⚠️ CSV load failed ({csv_path}): {e}")
+                print(f"WARNING: CSV load failed ({csv_path}): {e}")
 
-    print("⚠️ No dataset auto-loaded — upload one via the UI.")
+    print("WARNING: No dataset auto-loaded - upload one via the UI.")
 
 # Auto-load on startup
 _auto_load_dataset()
@@ -293,16 +284,16 @@ async def upload_dataset(background_tasks: BackgroundTasks, file: UploadFile = F
         )
 
     try:
-        _dataset = _normalize_df(df)
-        background_tasks.add_task(_save_dataset_to_firestore, _dataset)
-    except ValueError as e:
-        raise HTTPException(status_code=422, detail=str(e))
+        # Move normalization to background to prevent timeout
+        background_tasks.add_task(_process_and_save_dataset, df)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
 
     return {
         "success": True,
-        "total": len(_dataset),
+        "total": len(df),
         "columns": list(df.columns),
-        "message": f"Successfully loaded {len(_dataset):,} candidates."
+        "message": f"Successfully started processing {len(df):,} candidates in the background."
     }
 
 
@@ -402,12 +393,13 @@ async def screen_candidates(req: ScreenRequest):
         "time_seconds": round(t_end - t_start, 2),
     }
 
-    if db:
+    if supabase:
         import uuid
         from datetime import datetime
         try:
             doc_id = "SCR-" + str(uuid.uuid4())[:8].upper()
-            db.collection("screening_history").document(doc_id).set({
+            supabase.table("screening_history").insert({
+                "id": doc_id,
                 "job_description": req.job_description,
                 "filters": {
                     "algorithm": req.algorithm,
@@ -417,7 +409,7 @@ async def screen_candidates(req: ScreenRequest):
                 "total_screened": len(candidates),
                 "top_candidates": top,
                 "created_at": datetime.now().isoformat()
-            })
+            }).execute()
         except Exception as e:
             print(f"Failed to log screening: {e}")
 
@@ -473,18 +465,19 @@ async def analyze_resume(req: ResumeRequest):
         else:
             result["recommendation"] = "Not a Fit"
 
-    if db:
+    if supabase:
         import uuid
         from datetime import datetime
         try:
             doc_id = "RES-" + str(uuid.uuid4())[:8].upper()
-            db.collection("resume_analyses").document(doc_id).set({
+            supabase.table("resume_analyses").insert({
+                "id": doc_id,
                 "parsed": result["parsed"],
                 "category": result["rf_category"] if result["rf_confidence"] >= result["gb_confidence"] else result["gb_category"],
                 "match_scores": result.get("match_scores"),
                 "recommendation": result.get("recommendation"),
                 "created_at": datetime.now().isoformat()
-            })
+            }).execute()
         except Exception as e:
             print(f"Failed to log resume analysis: {e}")
 
@@ -519,7 +512,7 @@ _IQ_BANK = {
         "Explain the bias-variance tradeoff with a concrete real-world example.",
         "How do you handle class imbalance in a binary classification problem?",
         "What is cross-validation and why is it essential for model evaluation?",
-        "Compare Random Forest vs Gradient Boosting — when would you prefer each?",
+        "Compare Random Forest vs Gradient Boosting - when would you prefer each?",
         "How do you prevent overfitting in a deep neural network?"
     ],
     "SQL": [
@@ -702,21 +695,22 @@ async def ats_score_endpoint(req: ATSRequest):
         "breakdown": breakdown,
         "recommendation": "Excellent ATS compatibility! This resume will pass most ATS filters." if percentage >= 75
                           else "Good, but minor improvements recommended before submission." if percentage >= 55
-                          else "Significant improvements needed — most ATS systems may filter this resume."
+                          else "Significant improvements needed - most ATS systems may filter this resume."
     }
 
-    if db:
+    if supabase:
         import uuid
         from datetime import datetime
         try:
             doc_id = "ATS-" + str(uuid.uuid4())[:8].upper()
-            db.collection("ats_scores").document(doc_id).set({
+            supabase.table("ats_scores").insert({
+                "id": doc_id,
                 "score_percentage": percentage,
                 "grade": grade,
                 "job_description_provided": bool(req.job_description),
                 "breakdown_summary": {k: v["score"] for k, v in breakdown.items()},
                 "created_at": datetime.now().isoformat()
-            })
+            }).execute()
         except Exception as e:
             print(f"Failed to log ATS score: {e}")
 
@@ -774,17 +768,18 @@ async def interview_questions_endpoint(req: ResumeRequest):
         "skills_analyzed": len(skills)
     }
 
-    if db:
+    if supabase:
         import uuid
         from datetime import datetime
         try:
             doc_id = "INT-" + str(uuid.uuid4())[:8].upper()
-            db.collection("interview_questions").document(doc_id).set({
+            supabase.table("interview_questions").insert({
+                "id": doc_id,
                 "skills_analyzed": len(skills),
                 "total_questions": response["total_questions"],
                 "categories": [q["category"] for q in questions_out],
                 "created_at": datetime.now().isoformat()
-            })
+            }).execute()
         except Exception as e:
             print(f"Failed to log interview questions: {e}")
 
@@ -857,22 +852,23 @@ async def fraud_detect_endpoint(req: ResumeRequest):
         "flags_count": len(flags),
         "is_suspicious": risk_score >= 40,
         "recommendation": "Manual review strongly recommended before proceeding." if risk_score >= 40
-                          else "Some concerns detected — verify key claims independently." if risk_score >= 20
+                          else "Some concerns detected - verify key claims independently." if risk_score >= 20
                           else "No significant fraud indicators. Resume appears authentic."
     }
 
-    if db:
+    if supabase:
         import uuid
         from datetime import datetime
         try:
             doc_id = "FRD-" + str(uuid.uuid4())[:8].upper()
-            db.collection("fraud_reports").document(doc_id).set({
+            supabase.table("fraud_reports").insert({
+                "id": doc_id,
                 "risk_score": risk_score,
                 "risk_level": risk_level,
                 "flags_count": len(flags),
                 "flags": [f["type"] for f in flags],
                 "created_at": datetime.now().isoformat()
-            })
+            }).execute()
         except Exception as e:
             print(f"Failed to log fraud detection: {e}")
 
@@ -951,34 +947,34 @@ async def explain_recommendation_endpoint(req: ExplainRequest):
         factors.append({
             "factor": "Skill Alignment", "impact": "POSITIVE",
             "weight": round(kw_score * 40, 1),
-            "icon": "✅",
+            "icon": "SUCCESS:",
             "detail": f"{len(matched)} of {len(jd_skills)} required skills matched: {', '.join(list(matched)[:4])}"
         })
     if tfidf_score > 0.25:
         factors.append({
             "factor": "Semantic Relevance", "impact": "POSITIVE",
             "weight": round(tfidf_score * 35, 1),
-            "icon": "✅",
+            "icon": "SUCCESS:",
             "detail": f"Resume content is semantically aligned with the job description ({tfidf_score*100:.1f}% similarity)."
         })
     if parsed["experience_years"] >= 3:
         factors.append({
             "factor": "Work Experience", "impact": "POSITIVE",
             "weight": min(parsed["experience_years"] * 2, 15),
-            "icon": "✅",
+            "icon": "SUCCESS:",
             "detail": f"{parsed['experience_years']} years of professional experience detected."
         })
     if missing:
         factors.append({
             "factor": "Missing Required Skills", "impact": "NEGATIVE",
             "weight": round((len(missing) / max(len(jd_skills), 1)) * 25, 1),
-            "icon": "❌",
+            "icon": "ERROR:",
             "detail": f"{len(missing)} required skills absent: {', '.join(list(missing)[:4])}"
         })
     if parsed["experience_years"] < 2:
         factors.append({
             "factor": "Limited Experience", "impact": "NEGATIVE",
-            "weight": 10.0, "icon": "⚠️",
+            "weight": 10.0, "icon": "WARNING:",
             "detail": f"Only {parsed['experience_years']} year(s) of experience detected."
         })
 
@@ -990,7 +986,7 @@ async def explain_recommendation_endpoint(req: ExplainRequest):
         "hybrid_score": round(hybrid, 1),
         "verdict": verdict, "verdict_color": verdict_color,
         "verdict_reason": "Strong alignment across skills, semantic relevance, and experience." if hybrid >= 75
-                          else "Reasonable fit — skill gaps exist but core competency present." if hybrid >= 50
+                          else "Reasonable fit - skill gaps exist but core competency present." if hybrid >= 50
                           else "Significant mismatch in required skills and domain experience.",
         "factors": factors,
         "matched_skills": sorted(matched),
@@ -1017,7 +1013,7 @@ async def notify_candidates_endpoint(req: NotifyRequest):
                 "name": c.get("name", "Candidate"),
                 "email": c["email"],
                 "status": "Sent",
-                "score": c.get("score", "—"),
+                "score": c.get("score", "-"),
                 "message": f"Dear {c.get('name','Candidate')}, congratulations! You have been shortlisted for '{req.job_title}'. Our team will contact you within 2-3 business days."
             })
         else:
@@ -1130,17 +1126,18 @@ async def job_recommendations_endpoint(req: ResumeRequest):
         "ml_confidence": round(max(rf_conf, gb_conf) * 100, 1)
     }
 
-    if db:
+    if supabase:
         import uuid
         from datetime import datetime
         try:
             doc_id = "JOB-" + str(uuid.uuid4())[:8].upper()
-            db.collection("job_recommendations").document(doc_id).set({
+            supabase.table("job_recommendations").insert({
+                "id": doc_id,
                 "candidate_category": category,
                 "experience_years": exp,
                 "top_recommendation": adjusted[0]["title"] if adjusted else None,
                 "created_at": datetime.now().isoformat()
-            })
+            }).execute()
         except Exception as e:
             print(f"Failed to log job recommendation: {e}")
 
@@ -1174,13 +1171,13 @@ async def detect_language_endpoint(req: ResumeRequest):
         "translation_needed": detected != "English",
         "flag": {"English": "🇺🇸", "Spanish": "🇪🇸", "French": "🇫🇷", "German": "🇩🇪",
                  "Portuguese": "🇵🇹", "Arabic": "🇸🇦", "Hindi": "🇮🇳", "Chinese": "🇨🇳"}.get(detected, "🌐"),
-        "processing_note": "Resume is in English — full NLP processing available." if detected == "English"
+        "processing_note": "Resume is in English - full NLP processing available." if detected == "English"
                            else f"Resume appears to be in {detected}. Translation recommended for best results."
     }
 
 
 # ─────────────────────────────────────────────
-# MODULE 3 — Recommend to HR Endpoint
+# MODULE 3 - Recommend to HR Endpoint
 # ─────────────────────────────────────────────
 
 class HRCandidateItem(BaseModel):
@@ -1191,7 +1188,7 @@ class HRCandidateItem(BaseModel):
     experience_years: int
     category: str
     education: Optional[str] = "Not Specified"
-    recommendation: Optional[str] = "—"
+    recommendation: Optional[str] = "-"
     matched_skills: Optional[List[str]] = []
     missing_skills: Optional[List[str]] = []
     note: Optional[str] = ""
@@ -1235,7 +1232,7 @@ async def recommend_to_hr(req: HRRecommendRequest):
         ", ".join(c.name for c in highly_rec[:3]) if highly_rec else "No highly recommended candidates in this batch.",
 
         f"📋 Secondary review recommended for {len(consider_rec)} candidate(s) marked 'Consider for Interview'." if consider_rec else
-        "All candidates are clearly categorized — no secondary review needed.",
+        "All candidates are clearly categorized - no secondary review needed.",
 
         f"📧 Send interview invites to top {min(len(req.candidates), 3)} candidates within 2 business days.",
 
@@ -1262,12 +1259,12 @@ async def recommend_to_hr(req: HRRecommendRequest):
         "hr_status": "SUBMITTED"
     }
 
-    if db:
+    if supabase:
         try:
-            db.collection("hr_reports").document(report_id).set(report_data)
-            print(f"✅ Saved HR Report {report_id} to Firestore.")
+            supabase.table("hr_reports").insert(report_data).execute()
+            print(f"SUCCESS: Saved HR Report {report_id} to Supabase.")
         except Exception as e:
-            print(f"❌ Failed to save HR Report to Firestore: {e}")
+            print(f"ERROR: Failed to save HR Report to Supabase: {e}")
 
     return report_data
 

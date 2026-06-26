@@ -70,6 +70,13 @@ for cat_skills in SKILLS_DICT.values():
     ALL_SKILLS.extend(cat_skills)
 ALL_SKILLS = sorted(list(set(ALL_SKILLS)), key=len, reverse=True)
 
+# Pre-compile regex patterns for performance
+SKILL_PATTERNS = []
+for skill in ALL_SKILLS:
+    escaped_skill = re.escape(skill)
+    pattern = r'(?:^|[\s,.\-();/&])' + escaped_skill + r'(?:$|[\s,.\-();/&])'
+    SKILL_PATTERNS.append((skill, re.compile(pattern)))
+
 def clean_text(text):
     """
     Cleans raw text by removing punctuation, converting to lowercase, 
@@ -97,14 +104,9 @@ def extract_skills(text):
         return []
     text_lower = text.lower()
     found_skills = []
-    for skill in ALL_SKILLS:
-        # Avoid matching substrings within words. E.g. "go" in "government"
-        # We need custom word boundaries since some skills contain symbols like ++, .js, /, &
-        # Let's escape the skill for regex
-        escaped_skill = re.escape(skill)
-        # Handle special boundaries for skills ending/starting in special characters
-        pattern = r'(?:^|[\s,.\-();/&])' + escaped_skill + r'(?:$|[\s,.\-();/&])'
-        if re.search(pattern, text_lower):
+    
+    for skill, compiled_pattern in SKILL_PATTERNS:
+        if compiled_pattern.search(text_lower):
             found_skills.append(skill)
             
     # Return formatted list (capitalize appropriate skills for presentation)
