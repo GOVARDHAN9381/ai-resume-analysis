@@ -238,16 +238,51 @@ async function handleCsvUpload(file) {
     const res  = await fetch(API_BASE_URL + '/api/upload-dataset', { method: 'POST', body: formData });
     const data = await res.json();
     clearInterval(interval);
-    fill.style.width = '100%';
-    await new Promise(r => setTimeout(r, 400));
-    prog.classList.add('hidden');
+    fill.style.width = '90%';
 
-    if (!res.ok) { showToast(data.detail || 'Upload failed.', 'error'); return; }
+    if (!res.ok) {
+      prog.classList.add('hidden');
+      showToast(data.detail || 'Upload failed.', 'error');
+      return;
+    }
+
+    // Step 3: Poll /api/dataset-status until background processing is done
+    msg.textContent = `⏳ Processing ${data.total?.toLocaleString() || ''} candidates in background...`;
+    let pollAttempts = 0;
+    const MAX_POLLS = 120; // up to 4 minutes (120 × 2s)
+    await new Promise(resolve => {
+      const pollId = setInterval(async () => {
+        pollAttempts++;
+        try {
+          const statusRes = await fetch(API_BASE_URL + '/api/dataset-status');
+          const status = await statusRes.json();
+          const loaded = status.current_loaded || 0;
+          const total  = status.total_uploaded || data.total || 0;
+          const pctDone = total > 0 ? Math.min(90 + Math.round((loaded / total) * 9), 99) : 95;
+          fill.style.width = pctDone + '%';
+          msg.textContent = `⏳ Processing… ${loaded.toLocaleString()} / ${total.toLocaleString()} candidates loaded`;
+
+          if (status.ready || !status.running || pollAttempts >= MAX_POLLS) {
+            clearInterval(pollId);
+            resolve();
+          }
+        } catch (_) {
+          if (pollAttempts >= MAX_POLLS) { clearInterval(pollId); resolve(); }
+        }
+      }, 2000);
+    });
+
+    fill.style.width = '100%';
+    await new Promise(r => setTimeout(r, 300));
+    prog.classList.add('hidden');
 
     document.getElementById('upload-success-title').textContent = 'Dataset Loaded!';
     document.getElementById('upload-success-msg').textContent   = data.message;
     result.classList.remove('hidden');
     showToast(data.message, 'success');
+
+    // Step 4: Refresh dataset info NOW that processing is complete
+    _datasetInfo = null; // clear cache so it re-fetches fresh data
     await fetchDatasetInfo();
     populateCategoryFilter();
   } catch(e) {

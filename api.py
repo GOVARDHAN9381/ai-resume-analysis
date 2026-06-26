@@ -212,17 +212,26 @@ def _save_dataset_to_supabase(dataset: List[dict]):
     except Exception as e:
         print(f"ERROR: Failed to save to Supabase: {e}")
 
+# Background processing state tracker
+_processing_status = {"running": False, "total": 0, "done": 0, "error": None}
+
 def _process_and_save_dataset(df: pd.DataFrame):
     """Background task wrapper to normalize and save dataset."""
-    global _dataset
+    global _dataset, _processing_status
+    _processing_status = {"running": True, "total": len(df), "done": 0, "error": None}
     try:
         print(f"INFO: Normalizing dataset of {len(df)} rows in background...")
         normalized = _normalize_df(df)
         _dataset = normalized
+        _processing_status["done"] = len(normalized)
         print(f"SUCCESS: Normalization complete. Saving to Supabase...")
         _save_dataset_to_supabase(normalized)
+        _processing_status["running"] = False
     except Exception as e:
+        _processing_status["running"] = False
+        _processing_status["error"] = str(e)
         print(f"ERROR: Failed to process dataset in background: {e}")
+
 
 def _auto_load_dataset():
     """Try to load dataset from Firestore, then SQLite, then sample CSV, on startup."""
@@ -364,7 +373,22 @@ async def dataset_info():
         "avg_exp": avg_exp,
         "categories": categories,
         "exp_bands": exp_bands,
-        "source": "sqlite" if not _dataset else "csv"
+        "source": "sqlite" if not _dataset else "csv",
+        "processing": _processing_status.get("running", False),
+    }
+
+
+@app.get("/api/dataset-status")
+async def dataset_status():
+    """Poll this endpoint after upload to check background processing progress."""
+    global _processing_status, _dataset
+    return {
+        "running": _processing_status.get("running", False),
+        "total_uploaded": _processing_status.get("total", 0),
+        "processed": _processing_status.get("done", len(_dataset)),
+        "current_loaded": len(_dataset),
+        "error": _processing_status.get("error"),
+        "ready": not _processing_status.get("running", False),
     }
 
 
