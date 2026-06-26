@@ -9,3 +9,20 @@ serviceAccountKey.json
 *.log
 .DS_Store
 Thumbs.db
+
+# Large data files — too big for GitHub (>50MB)
+dataset_1_resumes_5k.csv
+dataset_2_resumes_5k.csv
+data/kaggle/dataset1/
+data/candidates.db
+data/*.db
+
+# Kaggle API token — never commit secrets
+.kaggle/
+kaggle.json
+
+# Upload-ready CSVs (generated locally, not tracked)
+data/kaggle/upload_*.csv
+
+# PDF resumes (binary, large)
+*.pdf
