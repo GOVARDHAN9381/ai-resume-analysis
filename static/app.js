@@ -249,13 +249,15 @@ async function handleCsvUpload(file) {
     // Step 3: Poll /api/dataset-status until background processing is done
     msg.textContent = `⏳ Processing ${data.total?.toLocaleString() || ''} candidates in background...`;
     let pollAttempts = 0;
-    const MAX_POLLS = 120; // up to 4 minutes (120 × 2s)
+    let lastStatus   = null;
+    const MAX_POLLS  = 120; // up to 4 minutes (120 × 2s)
     await new Promise(resolve => {
       const pollId = setInterval(async () => {
         pollAttempts++;
         try {
           const statusRes = await fetch(API_BASE_URL + '/api/dataset-status');
           const status = await statusRes.json();
+          lastStatus = status;
           const loaded = status.current_loaded || 0;
           const total  = status.total_uploaded || data.total || 0;
           const pctDone = total > 0 ? Math.min(90 + Math.round((loaded / total) * 9), 99) : 95;
@@ -276,10 +278,17 @@ async function handleCsvUpload(file) {
     await new Promise(r => setTimeout(r, 300));
     prog.classList.add('hidden');
 
+    // Show warning if Supabase sync had an issue (data still works in-session)
+    if (lastStatus?.error && lastStatus.error.includes('Supabase sync failed')) {
+      showToast('⚠️ Dataset loaded in memory. Supabase sync had an issue — screening still works this session.', 'error');
+    }
+
+    const loadedCount = lastStatus?.current_loaded || data.total || 0;
+    const successMsg  = `✅ Successfully loaded ${loadedCount.toLocaleString()} candidates.`;
     document.getElementById('upload-success-title').textContent = 'Dataset Loaded!';
-    document.getElementById('upload-success-msg').textContent   = data.message;
+    document.getElementById('upload-success-msg').textContent   = successMsg;
     result.classList.remove('hidden');
-    showToast(data.message, 'success');
+    showToast(successMsg, 'success');
 
     // Step 4: Refresh dataset info NOW that processing is complete
     _datasetInfo = null; // clear cache so it re-fetches fresh data

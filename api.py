@@ -189,12 +189,25 @@ def _load_supabase_as_dataset() -> List[dict]:
 
 def _save_dataset_to_supabase(dataset: List[dict]):
     """Clear old candidates and save the new dataset to Supabase using batches.
-    
+
     Deletes all existing rows first so each upload fully replaces the dataset
     rather than appending duplicates on top.
+
+    IMPORTANT: The 'id' field is stripped before insert so Supabase's SERIAL
+    auto-increment is always used. This prevents primary-key conflicts when
+    uploading a smaller dataset after a larger one (e.g., 2484 after 5200).
     """
     if not supabase or not dataset:
         return
+
+    # Strip the locally-generated integer 'id' so Supabase SERIAL auto-assigns.
+    # Without this, inserting id=1 after previously inserting id=1..5200 causes
+    # a unique-constraint violation because the sequence is not reset on delete.
+    def _strip_id(record: dict) -> dict:
+        r = dict(record)
+        r.pop("id", None)
+        return r
+
     try:
         # Clear existing candidates so we don't accumulate duplicates across uploads
         print("INFO: Clearing existing candidates from Supabase...")
@@ -204,13 +217,14 @@ def _save_dataset_to_supabase(dataset: List[dict]):
         count = 0
         chunk_size = 400
         for i in range(0, len(dataset), chunk_size):
-            chunk = dataset[i:i + chunk_size]
+            chunk = [_strip_id(r) for r in dataset[i:i + chunk_size]]
             supabase.table("candidates").insert(chunk).execute()
             count += len(chunk)
             print(f"INFO: Inserted {count:,}/{len(dataset):,} candidates...")
         print(f"SUCCESS: Successfully saved {count:,} candidates to Supabase.")
     except Exception as e:
         print(f"ERROR: Failed to save to Supabase: {e}")
+        raise  # Re-raise so _process_and_save_dataset can capture and surface it
 
 # Background processing state tracker
 _processing_status = {"running": False, "total": 0, "done": 0, "error": None}
@@ -226,7 +240,13 @@ def _process_and_save_dataset(df: pd.DataFrame):
         _metrics_cache = {}   # invalidate so ML Metrics recompute on next visit
         _processing_status["done"] = len(normalized)
         print(f"SUCCESS: Normalization complete. Saving to Supabase...")
-        _save_dataset_to_supabase(normalized)
+        try:
+            _save_dataset_to_supabase(normalized)
+        except Exception as supabase_err:
+            # Supabase save failed, but _dataset is already in memory — screening
+            # will still work for the current server session. Log and continue.
+            _processing_status["error"] = f"Supabase sync failed (data still usable this session): {supabase_err}"
+            print(f"WARNING: Supabase save failed but in-memory dataset is intact: {supabase_err}")
         _processing_status["running"] = False
     except Exception as e:
         _processing_status["running"] = False
