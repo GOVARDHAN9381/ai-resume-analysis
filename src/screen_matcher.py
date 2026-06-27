@@ -215,7 +215,7 @@ class ResumeMatcher:
         if not candidates_list:
             return [], False
 
-        resumes   = [c["resume_text"] for c in candidates_list]
+        resumes   = [str(c.get("resume_text") or "") for c in candidates_list]
         used_bert = False
 
         # ── Stage 1: TF-IDF pre-filter ────────────────────────────────────
@@ -277,15 +277,15 @@ class ResumeMatcher:
             recommendation = self.make_recommendation(score)
 
             results.append({
-                "id":                    c["id"],
-                "name":                  c["name"],
-                "email":                 c["email"],
-                "phone":                 c["phone"],
-                "category":              c["category"],
-                "experience_years":      c["experience_years"],
-                "education_degree":      c["education_degree"],
-                "education_institution": c["education_institution"],
-                "skills":                c["skills"],
+                "id":                    c.get("id"),
+                "name":                  c.get("name", "Unknown"),
+                "email":                 c.get("email", ""),
+                "phone":                 c.get("phone", "N/A"),
+                "category":              c.get("category", "General"),
+                "experience_years":      c.get("experience_years", 0),
+                "education_degree":      c.get("education_degree", "Not Specified"),
+                "education_institution": c.get("education_institution", "Not Specified"),
+                "skills":                c.get("skills", ""),
                 "resume_text":           c.get("resume_text", ""),
                 "score":                 round(score, 1),
                 "predicted_category_rf": rf_cat,
