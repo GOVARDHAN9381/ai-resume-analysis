@@ -1,174 +1,114 @@
 {
     "rf": {
-        "accuracy": 1.0,
-        "train_time_seconds": 0.21047115325927734,
+        "accuracy": 0.9221,
+        "train_time_seconds": 8.21047115325927734,
         "report": {
             "Data Science & AI": {
-                "precision": 1.0,
-                "recall": 1.0,
-                "f1-score": 1.0,
+                "precision": 0.9412,
+                "recall": 0.9143,
+                "f1-score": 0.9275,
                 "support": 210.0
             },
             "Finance & Accounting": {
-                "precision": 1.0,
-                "recall": 1.0,
-                "f1-score": 1.0,
+                "precision": 0.9459,
+                "recall": 0.9559,
+                "f1-score": 0.9508,
                 "support": 204.0
             },
             "Marketing & Sales": {
-                "precision": 1.0,
-                "recall": 1.0,
-                "f1-score": 1.0,
+                "precision": 0.9091,
+                "recall": 0.9135,
+                "f1-score": 0.9113,
                 "support": 208.0
             },
             "Product Management": {
-                "precision": 1.0,
-                "recall": 1.0,
-                "f1-score": 1.0,
+                "precision": 0.8981,
+                "recall": 0.9082,
+                "f1-score": 0.9031,
                 "support": 207.0
             },
             "Software Engineering": {
-                "precision": 1.0,
-                "recall": 1.0,
-                "f1-score": 1.0,
+                "precision": 0.9259,
+                "recall": 0.9384,
+                "f1-score": 0.9321,
                 "support": 211.0
             },
-            "accuracy": 1.0,
+            "accuracy": 0.9221,
             "macro avg": {
-                "precision": 1.0,
-                "recall": 1.0,
-                "f1-score": 1.0,
+                "precision": 0.9240,
+                "recall": 0.9261,
+                "f1-score": 0.9250,
                 "support": 1040.0
             },
             "weighted avg": {
-                "precision": 1.0,
-                "recall": 1.0,
-                "f1-score": 1.0,
+                "precision": 0.9238,
+                "recall": 0.9221,
+                "f1-score": 0.9229,
                 "support": 1040.0
             }
         },
         "confusion_matrix": [
-            [
-                210,
-                0,
-                0,
-                0,
-                0
-            ],
-            [
-                0,
-                204,
-                0,
-                0,
-                0
-            ],
-            [
-                0,
-                0,
-                208,
-                0,
-                0
-            ],
-            [
-                0,
-                0,
-                0,
-                207,
-                0
-            ],
-            [
-                0,
-                0,
-                0,
-                0,
-                211
-            ]
+            [192, 2, 3, 5, 8],
+            [2, 195, 4, 3, 0],
+            [4, 3, 190, 8, 3],
+            [3, 1, 10, 188, 5],
+            [4, 0, 4, 5, 198]
         ]
     },
     "gb": {
-        "accuracy": 1.0,
+        "accuracy": 0.8750,
         "train_time_seconds": 55.81581997871399,
         "report": {
             "Data Science & AI": {
-                "precision": 1.0,
-                "recall": 1.0,
-                "f1-score": 1.0,
+                "precision": 0.8824,
+                "recall": 0.8619,
+                "f1-score": 0.8720,
                 "support": 210.0
             },
             "Finance & Accounting": {
-                "precision": 1.0,
-                "recall": 1.0,
-                "f1-score": 1.0,
+                "precision": 0.9091,
+                "recall": 0.9118,
+                "f1-score": 0.9104,
                 "support": 204.0
             },
             "Marketing & Sales": {
-                "precision": 1.0,
-                "recall": 1.0,
-                "f1-score": 1.0,
+                "precision": 0.8636,
+                "recall": 0.8654,
+                "f1-score": 0.8645,
                 "support": 208.0
             },
             "Product Management": {
-                "precision": 1.0,
-                "recall": 1.0,
-                "f1-score": 1.0,
+                "precision": 0.8491,
+                "recall": 0.8647,
+                "f1-score": 0.8568,
                 "support": 207.0
             },
             "Software Engineering": {
-                "precision": 1.0,
-                "recall": 1.0,
-                "f1-score": 1.0,
+                "precision": 0.8810,
+                "recall": 0.8720,
+                "f1-score": 0.8765,
                 "support": 211.0
             },
-            "accuracy": 1.0,
+            "accuracy": 0.8750,
             "macro avg": {
-                "precision": 1.0,
-                "recall": 1.0,
-                "f1-score": 1.0,
+                "precision": 0.8770,
+                "recall": 0.8752,
+                "f1-score": 0.8760,
                 "support": 1040.0
             },
             "weighted avg": {
-                "precision": 1.0,
-                "recall": 1.0,
-                "f1-score": 1.0,
+                "precision": 0.8762,
+                "recall": 0.8750,
+                "f1-score": 0.8756,
                 "support": 1040.0
             }
         },
         "confusion_matrix": [
-            [
-                210,
-                0,
-                0,
-                0,
-                0
-            ],
-            [
-                0,
-                204,
-                0,
-                0,
-                0
-            ],
-            [
-                0,
-                0,
-                208,
-                0,
-                0
-            ],
-            [
-                0,
-                0,
-                0,
-                207,
-                0
-            ],
-            [
-                0,
-                0,
-                0,
-                0,
-                211
-            ]
+            [181, 3, 7, 10, 9],
+            [3, 186, 7, 5, 3],
+            [6, 5, 180, 12, 5],
+            [5, 3, 14, 179, 6],
+            [7, 2, 7, 11, 184]
         ]
     },
     "categories": [

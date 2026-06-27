@@ -217,12 +217,13 @@ _processing_status = {"running": False, "total": 0, "done": 0, "error": None}
 
 def _process_and_save_dataset(df: pd.DataFrame):
     """Background task wrapper to normalize and save dataset."""
-    global _dataset, _processing_status
+    global _dataset, _processing_status, _metrics_cache
     _processing_status = {"running": True, "total": len(df), "done": 0, "error": None}
     try:
         print(f"INFO: Normalizing dataset of {len(df)} rows in background...")
         normalized = _normalize_df(df)
         _dataset = normalized
+        _metrics_cache = {}   # invalidate so ML Metrics recompute on next visit
         _processing_status["done"] = len(normalized)
         print(f"SUCCESS: Normalization complete. Saving to Supabase...")
         _save_dataset_to_supabase(normalized)
@@ -541,16 +542,154 @@ async def analyze_resume(req: ResumeRequest):
     return result
 
 
+# ── Metrics cache ─────────────────────────────
+_metrics_cache: dict = {}          # {"dataset_size": int, "result": dict}
+
+def _compute_live_metrics() -> dict:
+    """Dynamically evaluate trained models on the current live dataset.
+
+    Uses the globally loaded _dataset (Supabase / SQLite / uploaded CSV)
+    so accuracy genuinely reflects the current data distribution.
+    Falls back to the static metrics.json when models or data are unavailable.
+    """
+    from sklearn.model_selection import train_test_split
+    from sklearn.metrics import accuracy_score, classification_report, confusion_matrix
+
+    metrics_path = "models/metrics.json"
+
+    # ── Load models & vectorizer ──────────────────────────────────────────
+    try:
+        with open("models/vectorizer.pkl", "rb") as f:
+            vectorizer = pickle.load(f)
+        with open("models/random_forest_model.pkl", "rb") as f:
+            rf_model = pickle.load(f)
+        with open("models/gradient_boosting_model.pkl", "rb") as f:
+            gb_model = pickle.load(f)
+    except Exception:
+        # Trained models not present — fall back to static file
+        if not os.path.exists(metrics_path):
+            return {"available": False}
+        with open(metrics_path, "r") as fh:
+            data = json.load(fh)
+        data["available"] = True
+        return data
+
+    # ── Build dataset from live _dataset ─────────────────────────────────
+    global _dataset
+    records = list(_dataset)  # snapshot
+
+    # We need resume_text + category
+    texts      = [str(r.get("resume_text", "")) for r in records]
+    categories = [str(r.get("category", ""))    for r in records]
+
+    # Drop rows with empty text or unknown category
+    valid = [(t, c) for t, c in zip(texts, categories) if t.strip() and c.strip()]
+    if len(valid) < 50:
+        # Not enough data for a meaningful split — use static file
+        if not os.path.exists(metrics_path):
+            return {"available": False}
+        with open(metrics_path, "r") as fh:
+            data = json.load(fh)
+        data["available"] = True
+        return data
+
+    texts_v, cats_v = zip(*valid)
+
+    # ── Vectorise ─────────────────────────────────────────────────────────
+    try:
+        X = vectorizer.transform(texts_v)
+    except Exception:
+        if not os.path.exists(metrics_path):
+            return {"available": False}
+        with open(metrics_path, "r") as fh:
+            data = json.load(fh)
+        data["available"] = True
+        return data
+
+    y = list(cats_v)
+
+    # ── Train / test split ────────────────────────────────────────────────
+    try:
+        X_train, X_test, y_train, y_test = train_test_split(
+            X, y, test_size=0.2, random_state=42, stratify=y
+        )
+    except ValueError:
+        # stratify fails if some class has < 2 samples → use no stratify
+        X_train, X_test, y_train, y_test = train_test_split(
+            X, y, test_size=0.2, random_state=42
+        )
+
+    # ── Evaluate Random Forest ────────────────────────────────────────────
+    t0 = time.time()
+    rf_preds  = rf_model.predict(X_test)
+    rf_time   = round(time.time() - t0, 4)
+    rf_acc    = round(accuracy_score(y_test, rf_preds), 4)
+    rf_report = classification_report(y_test, rf_preds, output_dict=True, zero_division=0)
+    rf_cm     = confusion_matrix(y_test, rf_preds).tolist()
+
+    # ── Evaluate Gradient Boosting ────────────────────────────────────────
+    t0 = time.time()
+    try:
+        gb_preds = gb_model.predict(X_test.toarray())
+    except Exception:
+        gb_preds = gb_model.predict(X_test)
+    gb_time   = round(time.time() - t0, 4)
+    gb_acc    = round(accuracy_score(y_test, gb_preds), 4)
+    gb_report = classification_report(y_test, gb_preds, output_dict=True, zero_division=0)
+    gb_cm     = confusion_matrix(y_test, gb_preds).tolist()
+
+    categories_list = sorted(list(set(y)))
+
+    result = {
+        "available": True,
+        "dynamic": True,          # flag so UI knows this is live-computed
+        "dataset_size": len(valid),
+        "rf": {
+            "accuracy": rf_acc,
+            "train_time_seconds": rf_time,
+            "report": rf_report,
+            "confusion_matrix": rf_cm,
+        },
+        "gb": {
+            "accuracy": gb_acc,
+            "train_time_seconds": gb_time,
+            "report": gb_report,
+            "confusion_matrix": gb_cm,
+        },
+        "categories": categories_list,
+    }
+
+    # Also persist to disk so the static fallback stays up-to-date
+    try:
+        os.makedirs("models", exist_ok=True)
+        save_data = {k: v for k, v in result.items() if k not in ("available", "dynamic")}
+        with open(metrics_path, "w") as fh:
+            json.dump(save_data, fh, indent=4)
+    except Exception:
+        pass
+
+    return result
+
+
 @app.get("/api/model-metrics")
 async def model_metrics():
-    """Return saved ML model metrics."""
-    metrics_path = "models/metrics.json"
-    if not os.path.exists(metrics_path):
-        return {"available": False}
-    with open(metrics_path, "r") as f:
-        data = json.load(f)
-    data["available"] = True
-    return data
+    """Return ML model metrics computed against the live dataset.
+
+    Results are cached by dataset size.  The cache refreshes automatically
+    whenever new data is uploaded or the dataset changes.
+    """
+    global _metrics_cache
+    current_size = len(_dataset)
+
+    # Return cached result if dataset hasn't changed
+    if _metrics_cache.get("dataset_size") == current_size and current_size > 0:
+        return _metrics_cache["result"]
+
+    result = _compute_live_metrics()
+
+    # Cache the result
+    _metrics_cache = {"dataset_size": current_size, "result": result}
+    return result
 
 
 # ─────────────────────────────────────────────

@@ -5,6 +5,13 @@ import random
 # Seed for reproducibility
 random.seed(42)
 
+# Shared/cross-domain skills that appear in multiple categories (adds realistic noise)
+SHARED_SKILLS = [
+    "SQL", "Python", "Excel", "Communication", "Project Management",
+    "Microsoft Office", "Data Analysis", "Presentation Skills",
+    "Problem Solving", "Team Collaboration", "Leadership", "Reporting"
+]
+
 # Define categories and skill pools
 CATEGORIES = [
     "Software Engineering",
@@ -261,7 +268,19 @@ def main():
         skills_available = SKILLS_POOL[category]
         num_skills = random.randint(5, 8)
         candidate_skills = random.sample(skills_available, min(num_skills, len(skills_available)))
-        
+
+        # Inject 1-2 shared skills (SQL, Python, Excel, etc.) to create realistic noise
+        num_shared = random.randint(1, 2)
+        candidate_skills += random.sample(SHARED_SKILLS, num_shared)
+
+        # With 20% probability, mix in 1 skill from an adjacent category (overlap noise)
+        if random.random() < 0.20:
+            other_cats = [c for c in CATEGORIES if c != category]
+            noise_cat = random.choice(other_cats)
+            noise_skill = random.choice(SKILLS_POOL[noise_cat])
+            if noise_skill not in candidate_skills:
+                candidate_skills.append(noise_skill)
+
         resume_text, edu, uni = generate_resume(category, name, candidate_skills, exp)
         email = f"{first.lower()}.{last.lower()}{random.randint(10, 99)}@example.com"
         phone = f"+1-{random.randint(200, 999)}-{random.randint(200, 999)}-{random.randint(1000, 9999)}"
