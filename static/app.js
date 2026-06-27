@@ -382,21 +382,25 @@ async function loadAnalytics() {
 }
 
 // ─── Click category bar → go to Screen page ──
-function screenByCategory(categoryLabel) {
+async function screenByCategory(categoryLabel) {
   // 1. Navigate to the Screen page
   showPage('screen');
 
-  // 2. Set the Category Filter dropdown to this category
+  // 2. Ensure the category dropdown is populated BEFORE we set its value.
+  //    showPage triggers populateCategoryFilter() but doesn't await it —
+  //    so we must await it here ourselves to avoid a race condition.
+  await populateCategoryFilter();
+
+  // 3. Set the Category Filter dropdown to this category
   const catFilter = document.getElementById('cat-filter');
   if (catFilter) {
-    // Try to find the matching option; fall back to "All"
     const found = [...catFilter.options].some(opt => opt.value === categoryLabel);
     catFilter.value = found ? categoryLabel : 'All';
   }
 
-  // 3. Fill the JD textarea with the matching template (or a generic one)
-  const jdInput   = document.getElementById('jd-input');
-  const tmplKey   = CATEGORY_JD_MAP[categoryLabel];
+  // 4. Fill the JD textarea with the matching template (or a generic one)
+  const jdInput  = document.getElementById('jd-input');
+  const tmplKey  = CATEGORY_JD_MAP[categoryLabel];
   if (jdInput) {
     if (tmplKey && JD_TEMPLATES[tmplKey]) {
       jdInput.value = JD_TEMPLATES[tmplKey];
@@ -409,7 +413,7 @@ function screenByCategory(categoryLabel) {
     }
   }
 
-  showToast(`📊 Screening for "${categoryLabel}" — JD pre-filled. Click Screen Candidates!`, 'success');
+  showToast(`📊 Screening for "${categoryLabel}" — JD & filter set. Click Screen Candidates!`, 'success');
 }
 
 // ─── Advanced Analytics ───────────────────────
