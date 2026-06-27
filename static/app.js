@@ -33,6 +33,21 @@ const JD_TEMPLATES = {
   fin: `We are seeking a Senior Financial Analyst for corporate finance.\n\nRequirements:\n- 5+ years of experience in Finance & Accounting.\n- Expert in Financial Analysis, advanced Excel, VBA, and financial modeling.\n- Experience in auditing, GAAP compliance, budgeting, and risk assessment.`
 };
 
+// ─── Category → JD template key mapping ─────
+// Maps dataset category names to a JD_TEMPLATES key so clicking a
+// category bar in Analytics auto-fills the Screen page JD.
+const CATEGORY_JD_MAP = {
+  'Software Engineering':   'swe',
+  'Data Science & AI':      'ds',
+  'Data Science':           'ds',
+  'Product Management':     'pm',
+  'Marketing & Sales':      'mkt',
+  'Marketing':              'mkt',
+  'Finance & Accounting':   'fin',
+  'Finance':                'fin',
+  'Accounting':             'fin',
+};
+
 // ─── State ────────────────────────────────────
 let _datasetInfo   = null;
 let _screenResults = [];
@@ -322,18 +337,23 @@ async function loadAnalytics() {
   document.getElementById('m-exp').textContent   = _datasetInfo.avg_exp + ' yrs';
   document.getElementById('m-cats').textContent  = Object.keys(_datasetInfo.categories || {}).length;
 
-  // Category chart
+  // Category chart — clickable rows → navigate to Screen with matching JD
   const cats       = _datasetInfo.categories || {};
   const catMax     = Math.max(...Object.values(cats), 1);
   const catContainer = document.getElementById('cat-chart');
   catContainer.innerHTML = '';
   Object.entries(cats).sort((a, b) => b[1] - a[1]).slice(0, 10).forEach(([label, count], i) => {
-    const pct = (count / catMax * 100).toFixed(1);
-    const row = document.createElement('div');
-    row.className = 'bar-row';
-    row.innerHTML = `<span class="bar-label">${label}</span>
+    const pct        = (count / catMax * 100).toFixed(1);
+    const hasJd      = !!CATEGORY_JD_MAP[label];
+    const row        = document.createElement('div');
+    row.className    = 'bar-row' + (hasJd ? ' bar-row-clickable' : '');
+    row.title        = hasJd ? `Click to screen "${label}" candidates` : label;
+    row.innerHTML    = `<span class="bar-label">${label}${hasJd ? ' <span class="bar-screen-hint">▶ Screen</span>' : ''}</span>
       <div class="bar-track"><div class="bar-fill" style="width:0%;transition-delay:${i*0.1}s" data-target="${pct}"></div></div>
       <span class="bar-count">${count.toLocaleString()}</span>`;
+    if (hasJd) {
+      row.addEventListener('click', () => screenByCategory(label));
+    }
     catContainer.appendChild(row);
   });
 
@@ -359,6 +379,37 @@ async function loadAnalytics() {
       bar.style.width = bar.dataset.target + '%';
     });
   }));
+}
+
+// ─── Click category bar → go to Screen page ──
+function screenByCategory(categoryLabel) {
+  // 1. Navigate to the Screen page
+  showPage('screen');
+
+  // 2. Set the Category Filter dropdown to this category
+  const catFilter = document.getElementById('cat-filter');
+  if (catFilter) {
+    // Try to find the matching option; fall back to "All"
+    const found = [...catFilter.options].some(opt => opt.value === categoryLabel);
+    catFilter.value = found ? categoryLabel : 'All';
+  }
+
+  // 3. Fill the JD textarea with the matching template (or a generic one)
+  const jdInput   = document.getElementById('jd-input');
+  const tmplKey   = CATEGORY_JD_MAP[categoryLabel];
+  if (jdInput) {
+    if (tmplKey && JD_TEMPLATES[tmplKey]) {
+      jdInput.value = JD_TEMPLATES[tmplKey];
+      // Also update the template dropdown so it reflects the selection
+      const tmplSelect = document.getElementById('jd-template');
+      if (tmplSelect) tmplSelect.value = tmplKey;
+    } else if (!jdInput.value.trim()) {
+      // No template mapping — only fill if the field is still empty
+      jdInput.value = `We are looking for a qualified ${categoryLabel} professional.\n\nRequirements:\n- Relevant experience in ${categoryLabel}.\n- Strong communication and analytical skills.\n- Proven track record in the domain.`;
+    }
+  }
+
+  showToast(`📊 Screening for "${categoryLabel}" — JD pre-filled. Click Screen Candidates!`, 'success');
 }
 
 // ─── Advanced Analytics ───────────────────────

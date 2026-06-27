@@ -396,6 +396,32 @@ code {
 .bar-row {
   display: flex; align-items: center; gap: 0.75rem;
 }
+.bar-row-clickable {
+  cursor: pointer;
+  border-radius: var(--radius-sm);
+  padding: 0.15rem 0.4rem;
+  margin: 0 -0.4rem;
+  transition: background 0.2s, transform 0.15s;
+}
+.bar-row-clickable:hover {
+  background: rgba(0, 245, 255, 0.07);
+  transform: translateX(3px);
+}
+.bar-row-clickable:hover .bar-fill {
+  background: linear-gradient(90deg, var(--cyan), #a855f7);
+  box-shadow: 0 0 12px rgba(0,245,255,0.35);
+}
+.bar-row-clickable:active { transform: scale(0.98); }
+.bar-screen-hint {
+  display: inline-block;
+  font-size: 0.65rem;
+  color: var(--cyan);
+  opacity: 0;
+  margin-left: 0.3rem;
+  transition: opacity 0.2s;
+  vertical-align: middle;
+}
+.bar-row-clickable:hover .bar-screen-hint { opacity: 1; }
 .bar-label { font-size: 0.82rem; color: var(--text-secondary); min-width: 120px; }
 .bar-track {
   flex: 1; height: 28px;
