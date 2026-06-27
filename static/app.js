@@ -484,9 +484,14 @@ async function runScreening() {
         max_results:     parseInt(document.getElementById('max-results').value),
       })
     });
-    const data = await res.json();
+    const text = await res.text();
     hideLoader();
-    if (!res.ok) { showToast(data.detail, 'error'); return; }
+    let data;
+    try { data = JSON.parse(text); } catch(_) {
+      showToast(`Server error (${res.status}): ${text.slice(0,120)}`, 'error');
+      return;
+    }
+    if (!res.ok) { showToast(data.detail || 'Screening failed.', 'error'); return; }
 
     _screenResults = data.results;
     _lastScreenTop = data.results;
@@ -1405,10 +1410,14 @@ async function runScreening() {
         max_results: parseInt(document.getElementById('max-results').value),
       })
     });
-    const data = await res.json();
+    const text = await res.text();
     hideLoader();
-
-    if (!res.ok) { showToast(data.detail, 'error'); return; }
+    let data;
+    try { data = JSON.parse(text); } catch(_) {
+      showToast(`Server error (${res.status}): ${text.slice(0,120)}`, 'error');
+      return;
+    }
+    if (!res.ok) { showToast(data.detail || 'Screening failed.', 'error'); return; }
 
     _screenResults = data.results;
     renderLeaderboard(data);

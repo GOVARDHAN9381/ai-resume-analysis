@@ -426,72 +426,90 @@ async def screen_candidates(req: ScreenRequest):
     """Screen candidates against a job description."""
     global _dataset
 
-    if not _dataset:
-        _dataset = _load_sqlite_as_dataset()
+    try:
+        if not _dataset:
+            _dataset = _load_sqlite_as_dataset()
 
-    if not _dataset:
-        raise HTTPException(status_code=400, detail="No dataset loaded. Please upload a CSV first.")
+        if not _dataset:
+            raise HTTPException(status_code=400, detail="No dataset loaded. Please upload a CSV first.")
 
-    if not req.job_description.strip():
-        raise HTTPException(status_code=400, detail="Job description cannot be empty.")
+        if not req.job_description.strip():
+            raise HTTPException(status_code=400, detail="Job description cannot be empty.")
 
-    # Filter candidates
-    candidates = [
-        c for c in _dataset
-        if int(c.get("experience_years", 0)) >= req.min_exp
-        and (req.filter_category == "All" or c.get("category") == req.filter_category)
-    ]
+        def _safe_exp(val):
+            """Safely convert experience_years to int; returns 0 on NaN/None/invalid."""
+            try:
+                v = float(val) if val is not None else 0.0
+                return 0 if (v != v) else int(v)  # v != v is True for NaN
+            except (TypeError, ValueError):
+                return 0
 
-    if not candidates:
-        return {"results": [], "total_screened": 0, "used_bert": False, "time_seconds": 0}
+        # Filter candidates
+        candidates = [
+            c for c in _dataset
+            if _safe_exp(c.get("experience_years", 0)) >= req.min_exp
+            and (req.filter_category == "All" or c.get("category") == req.filter_category)
+        ]
 
-    t_start = time.time()
-    results, used_bert = _matcher.screen_candidates(
-        req.job_description, candidates,
-        algorithm=req.algorithm,
-        max_results=req.max_results      # ⚡ ML predictions only for top N
-    )
-    t_end = time.time()
+        if not candidates:
+            return {"results": [], "total_screened": 0, "used_bert": False, "time_seconds": 0}
 
-    top = results[:req.max_results]
+        t_start = time.time()
+        results, used_bert = _matcher.screen_candidates(
+            req.job_description, candidates,
+            algorithm=req.algorithm,
+            max_results=req.max_results
+        )
+        t_end = time.time()
 
-    # Extract skill gap for top candidates
-    jd_skills = set(extract_skills(req.job_description))
-    for c in top:
-        cand_skills = set(extract_skills(str(c.get("resume_text", ""))))
-        c["matched_skills"] = sorted(jd_skills & cand_skills)
-        c["missing_skills"] = sorted(jd_skills - cand_skills)
-        # Remove bulky resume_text from response
-        c.pop("resume_text", None)
+        top = results[:req.max_results]
 
-    response = {
-        "results": top,
-        "total_screened": len(candidates),
-        "used_bert": used_bert,
-        "time_seconds": round(t_end - t_start, 2),
-    }
+        # Extract skill gap for top candidates
+        jd_skills = set(extract_skills(req.job_description))
+        for c in top:
+            cand_skills = set(extract_skills(str(c.get("resume_text", ""))))
+            c["matched_skills"] = sorted(jd_skills & cand_skills)
+            c["missing_skills"] = sorted(jd_skills - cand_skills)
+            # Remove bulky resume_text from response
+            c.pop("resume_text", None)
+            # Ensure experience_years is a safe int in the response
+            c["experience_years"] = _safe_exp(c.get("experience_years", 0))
 
-    if supabase:
-        import uuid
-        from datetime import datetime
-        try:
-            doc_id = "SCR-" + str(uuid.uuid4())[:8].upper()
-            supabase.table("screening_history").insert({
-                "id": doc_id,
-                "job_description": req.job_description,
-                "filters": {
-                    "algorithm": req.algorithm,
-                    "category": req.filter_category,
-                    "min_exp": req.min_exp
-                },
-                "total_screened": len(candidates),
-                "top_candidates": top,
-                "created_at": datetime.now().isoformat()
-            }).execute()
-        except Exception as e:
-            print(f"Failed to log screening: {e}")
+        response = {
+            "results": top,
+            "total_screened": len(candidates),
+            "used_bert": used_bert,
+            "time_seconds": round(t_end - t_start, 2),
+        }
 
-    return response
+        if supabase:
+            import uuid
+            from datetime import datetime
+            try:
+                doc_id = "SCR-" + str(uuid.uuid4())[:8].upper()
+                supabase.table("screening_history").insert({
+                    "id": doc_id,
+                    "job_description": req.job_description,
+                    "filters": {
+                        "algorithm": req.algorithm,
+                        "category": req.filter_category,
+                        "min_exp": req.min_exp
+                    },
+                    "total_screened": len(candidates),
+                    "top_candidates": top,
+                    "created_at": datetime.now().isoformat()
+                }).execute()
+            except Exception as e:
+                print(f"Failed to log screening: {e}")
+
+        return response
+
+    except HTTPException:
+        raise  # Let FastAPI handle 400/422 errors normally
+    except Exception as e:
+        import traceback
+        print(f"ERROR in /api/screen: {traceback.format_exc()}")
+        raise HTTPException(status_code=500, detail=f"Screening failed: {str(e)}")
 
 
 class ResumeRequest(BaseModel):
